@@ -141,16 +141,11 @@ class GTE_Attention(nn.Module):
             nn.init.xavier_normal_(self.VeRow)
 
     def propagate_attention(self, batch):
-        # TODO: preprocess a connected graph for nodes (including virtual nodes) in the same graph,\
+        # preprocess a connected graph for nodes (including virtual nodes) in the same graph,\
         #  recorded as batch.edge_index; as for original edge_index/attr, maintain as edge_index_original/edge_attr_original
         src = batch.K_h[batch.edge_index[0]]  # (num_nodes) x num_heads x out_dim
         dest = batch.Q_h[batch.edge_index[1]]  # (num_nodes) x num_heads x out_dim
         score = torch.mul(src, dest) if self.attn_product == 'mul' else (src + dest)  # element-wise multiplication;
-        # isnan = torch.isnan(score).any()
-        # if isnan:
-        #     logging.info("nan, 1")
-        #     score[torch.isnan(score)] = 0
-        # TODO: some other solutions including add or global attention; also consider symmetry
 
         # if batch.get("E", None) is not None
         batch.E = batch.E.view(-1, self.num_heads, self.out_dim * 2)
@@ -160,7 +155,7 @@ class GTE_Attention(nn.Module):
 
         if self.signed_sqrt:
             score = torch.sqrt(torch.relu(score).clamp_min(1e-8)) - torch.sqrt(
-                torch.relu(-score).clamp_min(1e-8))  # TODO: whether this is necessary
+                torch.relu(-score).clamp_min(1e-8)) 
         score = score + E_b
 
         if self.score_act:
@@ -182,7 +177,6 @@ class GTE_Attention(nn.Module):
         # raw_attn = score
         score = pyg_softmax(score, batch.edge_index[1], batch.num_nodes)  # (num node) x num_heads x 1
 
-        # TODO: check this num_nodes, should be total number of nodes in the batch
         score = self.dropout(score)
         batch.attn = score
 
@@ -365,7 +359,7 @@ class GraphTransformerEncoderLayer(nn.Module):
         e = None
 
         if temb is not None:
-            # TODO: temb should be align with size of node and edge features; process it in the higher-level model
+            # temb should be align with size of node and edge features; process it in the higher-level model
             temb_h, temb_e = temb
             temb_h = self.temb_proj_h(self.act(temb_h))
             temb_e = self.temb_proj_e(self.act(temb_e))
@@ -509,7 +503,7 @@ class GraphTransformerEncoder(nn.Module):
         self.bn_momentum = cfg.bn_momentum
         self.bn_no_runner = cfg.bn_no_runner
 
-        self.node_dict_dim = cfg.get('node_encoder_num_types', 1)  # TODO: update this dimension of dictionary
+        self.node_dict_dim = cfg.get('node_encoder_num_types', 1)  
         self.edge_dict_dim = cfg.get('edge_encoder_num_types', 1)
         if cfg.get('add_virtual_node_edge', True):
             self.node_dict_dim = self.node_dict_dim + 10  # 2
@@ -779,7 +773,6 @@ class GraphTransformerEncoder(nn.Module):
         return self.forward(batch, t, prefix, label, **kwargs)
 
     def decode(self, batch, **kwargs):
-        # TODO: implement decode
         return self.decode_node(batch.x), self.decode_edge(batch.edge_attr), self.decode_graph(
             batch.graph_attr).flatten()
 
@@ -793,9 +786,6 @@ class GraphTransformerEncoder(nn.Module):
             if len(label.shape) == 3:
                 label = label.squeeze(1)
         return label
-
-
-# TODO: in training, register the prompt vector into model and notice the optimizer; storage of the prompt vector
 
 
 @register_network('GraphTransformerDecoder')
@@ -846,7 +836,7 @@ class GraphTransformerDecoder(nn.Module):
         self.bn_momentum = cfg.bn_momentum
         self.bn_no_runner = cfg.bn_no_runner
 
-        self.node_dict_dim = cfg.get('node_encoder_num_types', 1)  # TODO: update this dimension of dictionary
+        self.node_dict_dim = cfg.get('node_encoder_num_types', 1) 
         self.edge_dict_dim = cfg.get('edge_encoder_num_types', 1)
         if cfg.get('add_virtual_node_edge', True):
             self.node_dict_dim = self.node_dict_dim + 10  # 2
@@ -873,7 +863,7 @@ class GraphTransformerDecoder(nn.Module):
             assert cfg.prefix_dim == cfg.hid_dim
             assert cfg.in_dim + cfg.posenc_dim == cfg.hid_dim
         self.prefix_emb = nn.Embedding(self.num_tasks, self.prefix_dim,
-                                       padding_idx=0)  # TODO: whether need this padding_idx=0?
+                                       padding_idx=0)  # whether need this padding_idx=0?
 
         self.task_type = cfg.get('task_type', 'regression')
         if cfg.get('label_raw_norm', None) == 'BatchNorm':
@@ -1055,7 +1045,7 @@ class GraphTransformerDecoder(nn.Module):
                 label, masked_label_idx = label
             else:
                 masked_label_idx = None
-            if len(label.shape) == 1:  # TODO: check this for molpcba
+            if len(label.shape) == 1:  # check this for molpcba
                 label = label.unsqueeze(1)
             if self.task_type == 'regression':
                 label = self.label_embed_regression(label)
@@ -1136,7 +1126,6 @@ class GraphTransformerDecoder(nn.Module):
         return self.forward(batch, t, prefix, label, **kwargs)
 
     def decode(self, batch, **kwargs):
-        # TODO: implement decode for graph level
         batch.x = self.decode_node_emb(batch.x)
         batch.edge_attr = self.decode_edge_emb(batch.edge_attr)
         # batch.graph_attr = self.decode_graph_emb(batch.graph_attr)
@@ -1211,7 +1200,7 @@ class GraphTransformerStructureEncoder(nn.Module):
         self.bn_momentum = cfg.bn_momentum
         self.bn_no_runner = cfg.bn_no_runner
 
-        self.node_dict_dim = cfg.get('node_encoder_num_types', 1)  # TODO: update this dimension of dictionary
+        self.node_dict_dim = cfg.get('node_encoder_num_types', 1)  
         self.edge_dict_dim = cfg.get('edge_encoder_num_types', 1)
         if cfg.get('add_virtual_node_edge', True):
             self.node_dict_dim = self.node_dict_dim + 10  # 2
@@ -1399,7 +1388,7 @@ class GraphTransformerStructureEncoder(nn.Module):
                 label, masked_label_idx = label
             else:
                 masked_label_idx = None
-            if len(label.shape) == 1:  # TODO: check this for molpcba
+            if len(label.shape) == 1:  # check this for molpcba
                 label = label.unsqueeze(1)
             if self.task_type == 'regression':
                 label = self.label_embed_regression(label)
@@ -1469,7 +1458,7 @@ class GraphTransformerStructureEncoder(nn.Module):
                 if self.final_norm:
                     v_e = self.final_norm_edge_2(v_e)
                 v_g = v_g + v_e
-            # TODO: do we need to change the virtual nodes in batch.x? used for classification loss
+            # Do we need to change the virtual nodes in batch.x? used for classification loss
             # batch.x[virtual_node_idx] = v_g
         else:
             v_g = batch.x[virtual_node_idx]
@@ -1480,7 +1469,6 @@ class GraphTransformerStructureEncoder(nn.Module):
         return self.forward(batch, t, prefix, label, **kwargs)
 
     def decode(self, batch, **kwargs):
-        # TODO: implement decode
         return self.decode_node(batch.x), self.decode_edge(batch.edge_attr), self.decode_graph(batch.graph_attr).flatten()
 
     def decode_recon(self, batch, **kwargs):
