@@ -37,7 +37,7 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation,
     for iter, batch in enumerate(loader):
         batch.split = 'train'
         batch.to(torch.device(cfg.accelerator))
-        # TODO: for masked_graph condition, should have masked batch for cond_stage_model, and unmasked batch for first_stage_model
+        # for masked_graph condition, should have masked batch for cond_stage_model, and unmasked batch for first_stage_model
         #  hence need to use ground truth for batch.x and batch.edge_attr, and mask batch.x_masked and batch.edge_attr_masked
 
         node_label, edge_label, graph_label = batch.x.clone().detach().flatten(), batch.edge_attr.clone().detach().flatten(), batch.y
@@ -55,7 +55,6 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation,
         # Parameters update after accumulating gradients for given num. batches.
         if ((iter + 1) % batch_accumulation == 0) or (iter + 1 == len(loader)):
             if cfg.optim.clip_grad_norm:
-                # TODO: gradient already have nan?
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
             optimizer.zero_grad()
@@ -108,26 +107,8 @@ def eval_epoch(logger, loader, model, split='val', repeat=1, ensemble_mode='none
                 _, graph_pred = model.inference(batch, ddim_steps=ddim_steps, ddim_eta=ddim_eta, use_ddpm_steps=use_ddpm_steps, visualize=visualize)
                 for each in graph_pred:
                     generated_mol.append(each)
-                # logging.info('graph_pred')
-                # logging.info(graph_pred)
-                # pred, true = model(batch)
-                # pred = model(batch)
-                # node_pred, edge_pred, graph_pred = model.model.decode(pred)
             else:
                 raise NotImplementedError
-                # batch_pred = []
-                # for i in range(repeat):
-                #     bc = deepcopy(batch)
-                #     bc.x_masked = batch.x.clone().detach()
-                #     bc.edge_attr_masked = batch.edge_attr.clone().detach()
-                #     loss_generation, loss_graph, graph_pred = model.validation_step(bc)
-                #     batch_pred.append(graph_pred)
-                #     del bc
-                # batch_pred = torch.cat(batch_pred).reshape(repeat, -1)
-                # if ensemble_mode == 'mean':
-                #     graph_pred = torch.mean(batch_pred, dim=0)
-                # else:
-                #     graph_pred = torch.median(batch_pred, dim=0)[0]
             # pred, true = model(batch)
             extra_stats = {}
         if cfg.dataset.name == 'ogbg-code2':
@@ -135,7 +116,7 @@ def eval_epoch(logger, loader, model, split='val', repeat=1, ensemble_mode='none
             _true = true
             _pred = pred_score
         else:
-            true = batch.y  # TODO: check this
+            true = batch.y  
             # loss, pred_score = compute_loss(graph_pred, true)
             _true = true.detach().to('cpu', non_blocking=True)
             _pred = true.detach().to('cpu', non_blocking=True)
@@ -228,18 +209,10 @@ def custom_train_diffusion(loggers, loaders, model, optimizer, scheduler):
         acc_edge = 0
         for b in range(B):
             X, E = batch.x[acc_node: acc_node + batch.num_node_per_graph[b]], batch.edge_attr[acc_edge: acc_edge + batch.num_node_per_graph[b] ** 2]
-            # if b == 0:
-            #     logging.info(X.shape)
-            #     logging.info(E.shape)
-            #     logging.info(X)
-            #     logging.info(E)
-            #     logging.info(batch.edge_index[:, :batch.num_node_per_graph[0] ** 2])
 
             acc_node += batch.num_node_per_graph[b]
             acc_edge += batch.num_node_per_graph[b] ** 2
             mol = build_molecule_with_partial_charges(X, E.reshape(X.shape[0], X.shape[0]), infos.atom_decoder)
-            # if b == 0:
-            #     logging.info(mol)
             smile = mol2smiles(mol)
             if smile is not None:
                 test_mols.append(mol)
