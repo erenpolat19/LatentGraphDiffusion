@@ -1,0 +1,217 @@
+# Original:  zinc-GRIT-2000.yaml
+out_dir: results
+metric_best: mae
+metric_agg: argmin
+tensorboard_each_run: False  # Log to Tensorboard each run
+#accelerator: "cuda:3"
+#device: "cuda:3"
+accelerator: "cuda:0"
+mlflow:
+  use: False
+  project: Exp
+  name: QM9-regression
+wandb:
+  use: False
+  project: QM9
+dataset:
+  format: PyG-QM9
+  name: standard
+  task: graph
+  task_type: regression
+  transductive: False
+  node_encoder: True
+  node_encoder_name: TypeDictNode
+  node_encoder_num_types: 5
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 5
+  edge_encoder_bn: False
+  add_virtual_node_edge: False
+  subgraph: False
+  remove_h: False
+  half: False
+  align: True
+  target: 1  # for \alpha
+train:
+  mode: train_diffusion
+  batch_size: 512
+  eval_period: 25
+  enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
+  ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
+  ckpt_clean: False # Delete old ckpt each time.
+  ckpt_period: 20
+  ensemble_repeat: 1
+  ensemble_mode: none
+  pretrain:
+    mask_node_prob: 0.0
+    mask_edge_prob: 0.0
+    mask_label_prob: 0.6
+    recon: none
+    original_task: True
+    input_target: True
+    node_factor: 0.0
+    edge_factor: 0.0
+    graph_factor: 1.0
+model:
+  type: LatentDiffusion
+  loss_fun: l1
+  edge_decoding: dot
+  graph_pooling: add
+posenc_RRWP:
+  enable: True
+  ksteps: 16
+encoder:
+  model_type: GraphTransformerEncoder
+  in_dim: 96
+  prefix_dim: 96
+  posenc_in_dim: 0
+  posenc_in_dim_edge: 0
+  posenc_dim: 0
+  pe_raw_norm: None
+  hid_dim: 96
+  out_dim: 8
+  use_time: False
+  temb_dim: 0
+  num_heads: 4
+  num_layers: 7
+  dropout: 0.05
+  attn_dropout: 0.2
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
+    signed_sqrt: True
+    score_act: True
+    deg_scaler: False
+    attn_product: mul
+    attn_reweight: True
+    edge_reweight: True
+  mpnn:
+    enable: True
+    act: 'relu'
+    dropout: 0.1
+    edge_enhance: True
+    project_edge: True
+  residual: True
+  layer_norm: True
+  batch_norm: False
+  act: 'relu'
+  norm_e: True
+  O_e: True
+  ff_e: True
+  update_e: True
+  pool: add
+  pool_edge: True
+  pool_vn: False
+  post_pool: True
+  final_norm: True
+  prefix_type: add_all
+  label_embed_type: add_all
+  num_task: 1
+  task_type: regression
+  label_raw_norm: LayerNorm
+  # num_classes: only for classification
+  node_encoder: True
+  node_encoder_name: TypeDictNode
+  node_encoder_num_types: 5  # for remove_h
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 5
+  edge_encoder_bn: False
+  add_virtual_node_edge: False
+dt:
+  in_dim: 8  # should be the same as encoder.out_dim
+  hid_dim: 96
+  out_dim: 8
+  use_time: True
+  temb_dim: 128
+  cond_dim: 8
+  num_heads: 8
+  num_layers: 4
+  self_attn: True
+  dropout: 0.05
+  attn_dropout: 0.25
+  residual: True
+  layer_norm: True
+  batch_norm: False
+  act: 'relu'
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
+    signed_sqrt: True
+    score_act: True
+    deg_scaler: False
+    attn_product: mul
+    attn_reweight: False
+    edge_reweight: False
+  norm_e: True
+  O_e: True
+  ff_e: False
+  ff_e_ca: True
+  ff_e_sa: False
+  update_e: True
+  pool: add
+  pool_edge: True
+  pool_vn: False
+  post_pool: True
+  final_norm: True
+  condition_list: ['masked_graph']
+diffusion:
+  conditioning_key: crossattn
+  hid_dim: 8  # should be the same as dt.in_dim
+  cond_stage_key: masked_graph
+  first_stage_config: results/QM9_regression_encoder_alpha/0/ckpt/836.ckpt
+  cond_stage_config: __is_first_stage__
+  node_factor: 1.0
+  edge_factor: 1.0
+  graph_factor: 1.0
+  task_factor: 1.0
+gt:
+  layer_type: GritTransformer
+  layers: 10
+  n_heads: 8
+  dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dropout: 0.0
+  layer_norm: False
+  batch_norm: True
+#  bn_momentum: 0.01
+  update_e: True
+  attn_dropout: 0.2
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
+gnn: # decoder --> san_graph = MLP + pooling
+  head: san_graph
+  layers_pre_mp: 0
+  layers_post_mp: 3  # Not used when `gnn.head: san_graph`
+  dim_inner: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  batchnorm: True
+  act: relu
+  dropout: 0.0
+  agg: mean
+  normalize_adj: False
+optim:
+  clip_grad_norm: True
+  optimizer: adamW
+  weight_decay: 1e-5
+  base_lr: 1e-4
+  max_epoch: 1000
+  num_warmup_epochs: 50
+  scheduler: cosine_with_warmup
+  min_lr: 1e-6

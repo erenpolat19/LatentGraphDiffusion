@@ -1,0 +1,164 @@
+# Original:  zinc-GRIT-2000.yaml
+out_dir: results
+metric_best: mae
+metric_agg: argmin
+tensorboard_each_run: False  # Log to Tensorboard each run
+#accelerator: "cuda:3"
+#device: "cuda:3"
+accelerator: "cuda:0"
+mlflow:
+  use: False
+  project: Exp
+  name: zinc-GRIT-RRWP
+wandb:
+  use: False
+  project: ZINC
+dataset:
+  format: PyG-ZINC
+  name: subset
+  task: graph
+  task_type: regression
+  transductive: False
+  node_encoder: True
+  node_encoder_name: TypeDictNode
+  node_encoder_num_types: 21 # actually 21 in Zinc-12k, 28 in Zinc-full
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 4
+  edge_encoder_bn: False
+  add_virtual_node_edge: True
+  subgraph: False
+train:
+  mode: pretrain_encoder
+  batch_size: 64
+  eval_period: 1
+  enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
+  ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
+  ckpt_clean: False # Do not delete old ckpt each time.
+  ckpt_period: 25
+  ensemble_repeat: 1
+  ensemble_mode: none
+  pretrain:
+    mask_node_prob: 0.0
+    mask_edge_prob: 0.0
+    mask_label_prob: 0.5
+    recon: none
+    original_task: True
+    input_target: True
+    node_factor: 0.0
+    edge_factor: 0.0
+    graph_factor: 1.0
+model:
+  type: GraphTransformerEncoder
+  loss_fun: l1
+  edge_decoding: dot
+  graph_pooling: add
+encoder:
+  in_dim: 36
+  prefix_dim: 64
+  posenc_in_dim: 20
+  posenc_in_dim_edge: 20
+  posenc_dim: 28
+  pe_raw_norm: None
+  hid_dim: 64
+  out_dim: 4
+  use_time: False
+  temb_dim: 0
+  num_heads: 4
+  num_layers: 10
+  dropout: 0.0
+  attn_dropout: 0.5
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
+    signed_sqrt: True
+    score_act: True
+    deg_scaler: False
+    attn_product: mul
+    attn_reweight: True
+    edge_reweight: True
+  mpnn:
+    enable: True
+    act: 'relu'
+    dropout: 0.0
+    edge_enhance: True
+    project_edge: True
+  residual: True
+  layer_norm: False
+  batch_norm: True
+  act: 'relu'
+  norm_e: True
+  O_e: True
+  ff_e: False
+  update_e: True
+  pool: add
+  pool_edge: True
+  pool_vn: False
+  # post_pool: True
+  prefix_type: add_virtual
+  label_embed_type: for first stage model only
+  num_task: 1
+  task_type: regression
+  # num_classes: only for classification
+  node_encoder: True
+  node_encoder_name: TypeDictNode
+  node_encoder_num_types: 21 # actually 21 in Zinc-12k, 28 in Zinc-full
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 4
+  edge_encoder_bn: False
+gt:
+  layer_type: GritTransformer
+  layers: 10
+  n_heads: 8
+  dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dropout: 0.0
+  layer_norm: False
+  batch_norm: True
+#  bn_momentum: 0.01
+  update_e: True
+  attn_dropout: 0.2
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
+gnn: # decoder --> san_graph = MLP + pooling
+  head: san_graph
+  layers_pre_mp: 0
+  layers_post_mp: 3  # Not used when `gnn.head: san_graph`
+  dim_inner: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  batchnorm: True
+  act: relu
+  dropout: 0.0
+  agg: mean
+  normalize_adj: False
+posenc_RWSE:
+  enable: False
+  kernel:
+    times_func: range(1,21)
+  model: Linear
+  dim_pe: 28
+  raw_norm_type: BatchNorm
+posenc_RRWP:
+  enable: True
+  ksteps: 20
+optim:
+  clip_grad_norm: True
+  optimizer: adamW
+  weight_decay: 1e-5
+  base_lr: 1e-3
+  max_epoch: 2000
+  num_warmup_epochs: 50
+  scheduler: cosine_with_warmup
+  min_lr: 1e-6

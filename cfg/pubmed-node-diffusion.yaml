@@ -1,0 +1,213 @@
+# Original:  zinc-GRIT-2000.yaml
+out_dir: results
+metric_best: accuracy
+tensorboard_each_run: False  # Log to Tensorboard each run
+#accelerator: "cuda:3"
+#device: "cuda:3"
+accelerator: "cuda:0"
+mlflow:
+  use: False
+  project: Exp
+  name: PubMed-node
+wandb:
+  use: False
+  project: PubMed-node
+dataset:
+  format: PyG-Planetoid
+  name: PubMed
+  task: node
+  task_type: classification
+  transductive: True
+  node_encoder: True
+  node_encoder_name: LinearNode+LapPE+RWSE
+#  node_encoder_num_types: 5
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: DummyEdge
+  edge_encoder_bn: False
+  add_virtual_node_edge: False
+  subgraph: False
+  aug_edge: False
+  split: [0.6, 0.2, 0.2]
+train:
+  mode: train_diffusion_inductive
+  batch_size: 1
+  eval_period: 5
+  enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
+  ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
+  ckpt_clean: False # Delete old ckpt each time.
+  ckpt_period: 20
+  ensemble_repeat: 1
+  ensemble_mode: none
+  pretrain:
+    mask_node_prob: 0.0
+    mask_edge_prob: 0.0
+    mask_label_prob: 0.8
+    recon: none
+    original_task: True
+    input_target: True
+model:
+  type: LatentDiffusionInductive
+  loss_fun: cross_entropy
+  edge_decoding: dot
+  graph_pooling: mean
+posenc_LapPE:
+  enable: True
+  eigen:
+    laplacian_norm: none
+    eigvec_norm: L2
+    max_freqs: 1
+  model: DeepSet
+  dim_pe: 8
+  layers: 2
+  raw_norm_type: none
+posenc_RWSE:
+  enable: True
+  kernel:
+    times_func: range(1,17)
+  model: Linear
+  dim_pe: 8
+  raw_norm_type: BatchNorm
+encoder:
+  model_type: MultiModel
+  layer_type: GENConv+GAT
+  in_dim: 96
+  hid_dim: 96
+  out_dim: 4
+  decode_dim: 3
+  use_time: False
+  temb_dim: 0
+  num_heads: 4
+  num_layers: 7
+  dropout: 0.25
+  attn_dropout: 0.2
+  residual: True
+  layer_norm: False
+  batch_norm: True
+  act: 'relu'
+#  norm_e: True
+#  O_e: True
+#  ff_e: True
+#  update_e: True
+#  pool: mean
+#  pool_edge: False
+#  pool_vn: False
+  latent_node: True
+  latent_edge: False
+  latent_graph: False
+  head: inductive_node
+  layers_post_mp: 2
+  post_pool: True
+  final_norm: True
+  prefix_type: add_all
+  label_embed_type: add_all
+  num_task: 1
+  task: node
+  task_type: classification
+  label_raw_norm: None
+  num_classes: 3
+  node_encoder: True
+  node_encoder_name: LinearNode+LapPE+RWSE
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: DummyEdge
+  edge_encoder_bn: False
+  add_virtual_node_edge: False
+dt:
+  type: CustomDenoisingNetwork
+  layer_type: GCN+GAT
+  in_dim: 4  # should be the same as encoder.out_dim
+  hid_dim: 128
+  out_dim: 4
+  use_time: True
+  temb_dim: 128
+  cond_dim: 4
+  num_heads: 8
+  num_layers: 4
+  self_attn: True
+  dropout: 0.2
+  attn_dropout: 0.25
+  residual: True
+  layer_norm: False
+  batch_norm: True
+  act: 'relu'
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: False
+    O_e: True
+    norm_e: True
+    fwl: False
+    signed_sqrt: True
+    score_act: True
+    deg_scaler: False
+    attn_product: mul
+    attn_reweight: False
+    edge_reweight: False
+  norm_e: True
+  O_e: True
+  ff_e: False
+  ff_e_ca: True
+  ff_e_sa: False
+  edge_enhance: False
+  update_e: False
+  latent_node: True
+  latent_edge: False
+  latent_graph: False
+  layers_post_mp: 2
+  pool: none
+  pool_edge: False
+  pool_vn: False
+  post_pool: True
+  final_norm: True
+  condition_list: ['masked_graph']
+diffusion:
+  timesteps: 500
+  conditioning_key: crossattn
+  hid_dim: 4  # should be the same as dt.in_dim
+  cond_stage_key: masked_graph
+  first_stage_config: results/pubmed-node-encoder/3/ckpt/238.ckpt
+  cond_stage_config: __is_first_stage__
+  node_factor: 1.0
+  edge_factor: 0.0
+  graph_factor: 0.0
+  task_factor: 1.0
+gt:
+  layer_type: GritTransformer
+  layers: 10
+  n_heads: 8
+  dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dropout: 0.0
+  layer_norm: False
+  batch_norm: True
+#  bn_momentum: 0.01
+  update_e: True
+  attn_dropout: 0.2
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
+gnn: # decoder --> san_graph = MLP + pooling
+  head: san_graph
+  layers_pre_mp: 0
+  layers_post_mp: 3  # Not used when `gnn.head: san_graph`
+  dim_inner: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  batchnorm: True
+  act: relu
+  dropout: 0.0
+  agg: mean
+  normalize_adj: False
+optim:
+  clip_grad_norm: True
+  optimizer: adamW
+  weight_decay: 1e-5
+  base_lr: 1e-4
+  max_epoch: 200
+  num_warmup_epochs: 20
+  scheduler: cosine_with_warmup
+  min_lr: 1e-6
