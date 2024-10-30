@@ -110,26 +110,9 @@ def eval_epoch(logger, loader, model, w, split='val', repeat=1, ensemble_mode='n
                         x, edge_attr, y_pred = graph_pred[i]
                         y_pred_list.append(y_pred)
                     y_pred = torch.cat(y_pred_list, dim=0)
-                # logging.info('graph_pred')
-                # logging.info(graph_pred)
-                # pred, true = model(batch)
-                # pred = model(batch)
-                # node_pred, edge_pred, graph_pred = model.model.decode(pred)
+                
             else:
                 raise NotImplementedError
-                # batch_pred = []
-                # for i in range(repeat):
-                #     bc = deepcopy(batch)
-                #     bc.x_masked = batch.x.clone().detach()
-                #     bc.edge_attr_masked = batch.edge_attr.clone().detach()
-                #     loss_generation, loss_graph, graph_pred = model.validation_step(bc)
-                #     batch_pred.append(graph_pred)
-                #     del bc
-                # batch_pred = torch.cat(batch_pred).reshape(repeat, -1)
-                # if ensemble_mode == 'mean':
-                #     graph_pred = torch.mean(batch_pred, dim=0)
-                # else:
-                #     graph_pred = torch.median(batch_pred, dim=0)[0]
             # pred, true = model(batch)
             extra_stats = {}
         if cfg.dataset.name == 'ogbg-code2':
