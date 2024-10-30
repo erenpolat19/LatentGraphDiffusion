@@ -80,12 +80,7 @@ def eval_epoch(logger, loader, model, split='val', repeat=1, ensemble_mode='none
                 ddim_eta = cfg.diffusion.get('ddim_eta', 0.0)
                 use_ddpm_steps = cfg.diffusion.get('use_ddpm_steps', False)
                 loss_graph, graph_pred = model.inference(batch, ddim_steps=ddim_steps, ddim_eta=ddim_eta, use_ddpm_steps=use_ddpm_steps)
-                # loss_generation, loss_graph, graph_pred = model.validation_step(batch)
-                # logging.info('graph_pred')
-                # logging.info(graph_pred)
-                # pred, true = model(batch)
-                # pred = model(batch)
-                # node_pred, edge_pred, graph_pred = model.model.decode(pred)
+                
             else:
                 batch_pred = []
                 ddim_steps = cfg.diffusion.get('ddim_steps', None)
@@ -97,8 +92,6 @@ def eval_epoch(logger, loader, model, split='val', repeat=1, ensemble_mode='none
                     bc.edge_attr_masked = batch.edge_attr.clone().detach()
                     # loss_generation, loss_graph, graph_pred = model.validation_step(bc)
                     loss_graph, graph_pred = model.inference(bc, ddim_steps=ddim_steps, ddim_eta=ddim_eta, use_ddpm_steps=use_ddpm_steps)
-                    # if cfg.dataset.format == 'PyG-QM9':
-                    #     graph_pred = graph_pred * batch.y_std + batch.y_mean
                     batch_pred.append(graph_pred)
                     del bc
                 batch_pred = torch.cat(batch_pred).reshape(repeat, -1)
