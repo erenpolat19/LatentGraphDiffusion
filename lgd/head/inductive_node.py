@@ -1,0 +1,40 @@
+import torch
+import torch.nn as nn
+from torch_geometric.graphgym.config import cfg
+from torch_geometric.graphgym.models.layer import new_layer_config, MLP
+from torch_geometric.graphgym.register import register_head
+
+
+@register_head('inductive_node')
+class GNNInductiveNodeHead(nn.Module):
+    """
+    GNN prediction head for inductive node prediction tasks.
+
+    Args:
+        dim_in (int): Input dimension
+        dim_out (int): Output dimension. For binary prediction, dim_out=1.
+    """
+
+    def __init__(self, dim_in, dim_out, L=2, norm=False):
+        super(GNNInductiveNodeHead, self).__init__()
+        self.layer_post_mp = MLP(
+            new_layer_config(dim_in, dim_out, L,
+                             has_act=False, has_bias=True, cfg=cfg))
+        self.norm = nn.LayerNorm(dim_out) if norm else nn.Identity()
+
+    def _apply_index(self, batch, mask=None):
+        if isinstance(batch, torch.Tensor):
+            return batch[mask]
+        return batch.x[mask]
+
+    def forward(self, batch, return_batch=False, **kwargs):
+        batch = self.layer_post_mp(batch)
+        if 'task' in kwargs and kwargs['task'] == 'node':
+            mask = batch.get(kwargs['split']+'_mask', None)
+            pred = self._apply_index(batch, mask)
+            return pred
+        if isinstance(batch, torch.Tensor):
+            batch = self.norm(batch)
+        else:
+            batch.x = self.norm(batch.x)
+        return batch if return_batch else batch.x
