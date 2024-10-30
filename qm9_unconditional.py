@@ -174,17 +174,12 @@ if __name__ == '__main__':
         cfg.run_id = run_id
         seed_everything(cfg.seed)
         auto_select_device()
-        # TODO: debug loader and dataset
-        # dataset = load_dataset_master(cfg.dataset.format, cfg.dataset.name, cfg.dataset.dataset_dir)
-        # if cfg.pretrained.dir:
-        #     cfg = load_pretrained_model_cfg(cfg)
         loaders = custom_create_loader()
         loggers = create_logger()
         logging.info(f"[*] Run ID {run_id}: seed={cfg.seed}, "
                      f"split_index={cfg.dataset.split_index}")
         logging.info(f"    Starting now: {datetime.datetime.now()}")
-        # model = create_model()
-        # ddpm = DDPM(conditioning_key=cfg.diffusion.conditioning_key, hid_dim=cfg.diffusion.hid_dim)
+        
         model = eval(cfg.model.get('type', 'LatentDiffusion'))\
             (timesteps=cfg.diffusion.get('timesteps', 1000), conditioning_key=cfg.diffusion.conditioning_key,
              hid_dim=cfg.diffusion.hid_dim, parameterization=cfg.diffusion.get("parameterization", "x0"),
