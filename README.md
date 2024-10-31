@@ -1,6 +1,8 @@
 # LatentGraphDiffusion
 Official Repository for NeurIPS 2024 Paper Unifying Generation and Prediction on Graphs with Latent Graph Diffusion.
 
+![Latent Graph Diffusion](./LatentGraphDiffusion.png)
+
 ### Python environment setup with Conda
 
 We build our code based on [GraphGPS](https://github.com/rampasek/GraphGPS) with many modification and improvements, including combining it with DDPM.
