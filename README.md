@@ -1,4 +1,4 @@
-# LatentGraphDiffusion
+# Latent Graph Diffusion
 Official Repository for NeurIPS 2024 Paper Unifying Generation and Prediction on Graphs with Latent Graph Diffusion.
 
 ![Latent Graph Diffusion](./LatentGraphDiffusion.png)
