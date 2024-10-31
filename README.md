@@ -30,7 +30,7 @@ conda clean --all
 conda activate lgd
 
 # An example to run experiments on Zinc dataset; change the configs files to run other experiments on different datasets with desired hyperparameters
-# The commands are all in xxx.sh, and the configurations are set in xxx.yaml
+# The commands are all in cfg/xxx.sh, and the configurations are set in cfg/xxx.yaml
 
 # The first step is to pretrain an autoencoder
 python pretrain.py --cfg cfg/zinc-encoder.yaml --repeat 5 wandb.use False
