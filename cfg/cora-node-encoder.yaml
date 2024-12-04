@@ -28,8 +28,7 @@ dataset:
   add_virtual_node_edge: False
   subgraph: False
   aug_edge: False
-  split_mode: standard
-#  split: [0.6, 0.2, 0.2]
+  split: [0.6, 0.2, 0.2]
 train:
   mode: pretrain_encoder_inductive
   batch_size: 1
@@ -43,7 +42,7 @@ train:
   pretrain:
     mask_node_prob: 0.0
     mask_edge_prob: 0.0
-    mask_label_prob: 0.5
+    mask_label_prob: 0.8
     recon: none
     original_task: True
     input_target: True
@@ -59,7 +58,7 @@ posenc_LapPE:
     eigvec_norm: L2
     max_freqs: 1
   model: DeepSet
-  dim_pe: 16
+  dim_pe: 8
   layers: 2
   raw_norm_type: none
 posenc_RWSE:
@@ -67,7 +66,7 @@ posenc_RWSE:
   kernel:
     times_func: range(1,17)
   model: Linear
-  dim_pe: 16
+  dim_pe: 8
   raw_norm_type: BatchNorm
 encoder:
   model_type: MultiModel
@@ -79,9 +78,9 @@ encoder:
   use_time: False
   temb_dim: 0
   num_heads: 4
-  num_layers: 5
+  num_layers: 7
   dropout: 0.25
-  attn_dropout: 0.25
+  attn_dropout: 0.2
   residual: True
   layer_norm: False
   batch_norm: True

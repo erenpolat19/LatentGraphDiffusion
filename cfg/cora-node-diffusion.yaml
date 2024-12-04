@@ -26,9 +26,8 @@ dataset:
   edge_encoder_name: DummyEdge
   edge_encoder_bn: False
   add_virtual_node_edge: False
-  subgraph: False
   aug_edge: False
-  split_mode: standard
+  split: [0.6, 0.2, 0.2]
 train:
   mode: train_diffusion_inductive
   batch_size: 1
@@ -42,7 +41,7 @@ train:
   pretrain:
     mask_node_prob: 0.0
     mask_edge_prob: 0.0
-    mask_label_prob: 0.5
+    mask_label_prob: 0.8
     recon: none
     original_task: True
     input_target: True
@@ -58,7 +57,7 @@ posenc_LapPE:
     eigvec_norm: L2
     max_freqs: 1
   model: DeepSet
-  dim_pe: 16
+  dim_pe: 8
   layers: 2
   raw_norm_type: none
 posenc_RWSE:
@@ -66,7 +65,7 @@ posenc_RWSE:
   kernel:
     times_func: range(1,17)
   model: Linear
-  dim_pe: 16
+  dim_pe: 8
   raw_norm_type: BatchNorm
 encoder:
   model_type: MultiModel
@@ -78,9 +77,9 @@ encoder:
   use_time: False
   temb_dim: 0
   num_heads: 4
-  num_layers: 5
+  num_layers: 7
   dropout: 0.25
-  attn_dropout: 0.25
+  attn_dropout: 0.2
   residual: True
   layer_norm: False
   batch_norm: True
@@ -167,7 +166,7 @@ diffusion:
   conditioning_key: crossattn
   hid_dim: 4  # should be the same as dt.in_dim
   cond_stage_key: masked_graph
-  first_stage_config: results/cora-node-encoder/7/ckpt/303.ckpt  # need to replace with the ckpt you desire
+  first_stage_config: results/cora-node-encoder/2/ckpt/499.ckpt
   cond_stage_config: __is_first_stage__
   node_factor: 1.0
   edge_factor: 0.0
@@ -206,8 +205,8 @@ optim:
   clip_grad_norm: True
   optimizer: adamW
   weight_decay: 1e-5
-  base_lr: 1e-3
-  max_epoch: 500
+  base_lr: 1e-4
+  max_epoch: 200
   num_warmup_epochs: 20
   scheduler: cosine_with_warmup
   min_lr: 1e-6
