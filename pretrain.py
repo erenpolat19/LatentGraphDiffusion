@@ -32,6 +32,8 @@ from lgd.agg_runs import agg_runs
 from lgd.finetuning import load_pretrained_model_cfg, \
     init_model_from_pretrained
 
+from lgd.model.GraphTransformerEncoder import GraphTransformerEncoder # HERE 
+
 #
 # parser = argparse.ArgumentParser()
 # parser.add_argument("--dataset", type=str, default="zinc12")
@@ -266,7 +268,7 @@ if __name__ == '__main__':
         seed_everything(cfg.seed)
         auto_select_device()
         # TODO: debug loader and dataset
-        # dataset = load_dataset_master(cfg.dataset.format, cfg.dataset.name, cfg.dataset.dataset_dir)
+        # dataset = load_dataset_master(cfg.dataset.format, cfg.dataset.name, cfg.dataset.dataset_dir) # HERE - uncommented this line
         if cfg.pretrained.dir:
             cfg = load_pretrained_model_cfg(cfg)
         loaders = create_loader()
@@ -275,6 +277,7 @@ if __name__ == '__main__':
                      f"split_index={cfg.dataset.split_index}")
         logging.info(f"    Starting now: {datetime.datetime.now()}")
         # model = create_model()
+        print("Available models:", network_dict.keys())
         model = create_model_custom(cfg_name='encoder')
         if cfg.pretrained.dir:
             model = init_model_from_pretrained(
