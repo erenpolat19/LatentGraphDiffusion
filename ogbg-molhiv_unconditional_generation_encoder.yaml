@@ -6,6 +6,8 @@ tensorboard_each_run: False  # Log to Tensorboard each run
 #accelerator: "cuda:3"
 #device: "cuda:3"
 accelerator: "cuda:0"
+run_multiple_splits: [] #FROM CALLIE -eren
+name_tag: ogbg-molhiv
 mlflow:
   use: False
   project: molhiv
@@ -30,6 +32,14 @@ dataset:
   add_virtual_node_edge: False 
   subgraph: False
   remove_h: True
+  split_index: 0 # TOOK FROM CALLIE -eren
+posenc_RWSE: #I looked at GraphGPS -eren
+  enable: True
+  kernel:
+    times_func: range(1,17)
+  model: Linear
+  dim_pe: 16
+  raw_norm_type: BatchNorm
 train:
   mode: pretrain_encoder
   batch_size: 128
@@ -49,7 +59,9 @@ train:
     input_target: False
     node_factor: 1.0
     edge_factor: 1.0
-    graph_factor: 0.0 #WHAT IS THIS
+    graph_factor: 0.0 #WHAT IS THIS (OH NOW I KNOW ITS GRAPH LEVEL TASK. node, edge level reconstruction is for the ones above-eren)
+pretrained:
+  dir:
 model:
   type: GraphTransformerStructureEncoder
   loss_fun: l1
