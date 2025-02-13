@@ -213,9 +213,6 @@ def load_dataset_master(format, name, dataset_dir):
         if name.startswith('ogbg'):
             print(dataset_dir, name)
             dataset = preformat_OGB_Graph(dataset_dir, name.replace('_', '-'))
-        if name == 'custom-ogbg-molhiv': # HERE -- added this to load ogbg-molhiv (I think this is a shortcut, correct way would be to add a custom datset as in GraphGym?)
-            dataset = PygGraphPropPredDataset(name="ogbg-molhiv")
-            print(dataset.root)
             # for debug
             # for i in dataset.split_idxs[2]:
             #     dataset[i].y = dataset[i].y.fill_(0)

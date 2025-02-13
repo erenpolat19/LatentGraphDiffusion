@@ -17,7 +17,7 @@ wandb:
   project: ogbg_molhiv
 dataset:
   format: OGB
-  name: custom-ogbg-molhiv
+  name: ogbg-molhiv
   task: graph
   task_type: classification
   transductive: False
