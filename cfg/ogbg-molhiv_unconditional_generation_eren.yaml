@@ -17,12 +17,12 @@ wandb:
   project: molhiv
 dataset:
   format: OGB
-  name: custom-ogbg-molhiv
+  name: ogbg-molhiv
   task: graph
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: Atom+LapPe #Atom+RWSE or Atom+LapPe etc
+  node_encoder_name: Atom #Atom+RWSE or Atom+LapPe etc
   node_encoder_num_types: 9  # for remove_h #FIND OUT THIS
   node_encoder_bn: False
   edge_encoder: True
@@ -33,13 +33,26 @@ dataset:
   subgraph: False
   remove_h: True
   split_index: 0 # TOOK FROM CALLIE -eren
+posenc_LapPE: #TOOK FROM GRAPHGPS -eren
+  enable: False #True
+  eigen:
+    laplacian_norm: sym
+    eigvec_norm: L2
+    max_freqs: 10
+  model: Transformer  # DeepSet
+  dim_pe: 16
+  layers: 3
+  n_heads: 4  # Only used when `posenc.model: Transformer`
+  raw_norm_type: none
+  spd: Falsep
 posenc_RWSE: #I looked at GraphGPS -eren
-  enable: True
+  enable: False #True
   kernel:
     times_func: range(1,17)
   model: Linear
   dim_pe: 16
   raw_norm_type: BatchNorm
+  spd: False
 train:
   mode: pretrain_encoder
   batch_size: 128
@@ -68,8 +81,16 @@ model:
   edge_decoding: dot
   graph_pooling: add
 posenc_RRWP:
-  enable: True
+  enable: False #True
   ksteps: 16
+  spd: False
+prep:
+  exp: # HERE
+  dist_enable: # HERE
+posenc_ERN: # HERE
+  enable: 
+posenc_ERE: # HERE
+  enable:
 encoder:
   model_type: GraphTransformerStructureEncoder
   in_dim: 48 #FIGURE THIS OUT
@@ -86,6 +107,8 @@ encoder:
   num_layers: 5
   dropout: 0.2
   attn_dropout: 0.5
+  bn_momentum: 0.1
+  bn_no_runner: False
   attn:
     clamp: 5.
     act: 'relu'
@@ -100,6 +123,8 @@ encoder:
     attn_product: mul
     attn_reweight: False
     edge_reweight: False
+    bn_momentum: 0.1
+    bn_no_runner: False
   mpnn:
     enable: True
     act: 'relu'
@@ -126,7 +151,7 @@ encoder:
   task_type: classification
   # num_classes: only for classification
   node_encoder: True
-  node_encoder_name: Atom+LapPe #AGAIN THIS MIGHT CHANGE TO ATOM ETC
+  node_encoder_name: Atom #AGAIN THIS MIGHT CHANGE TO ATOM+LAPPE ETC
   node_encoder_num_types: 9
   node_encoder_bn: False
   edge_encoder: True
@@ -142,7 +167,7 @@ gt:
   dropout: 0.0
   layer_norm: False
   batch_norm: True
-#  bn_momentum: 0.01
+  
   update_e: True
   attn_dropout: 0.2
   attn:
