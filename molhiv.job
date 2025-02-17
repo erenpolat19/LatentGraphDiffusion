@@ -1,0 +1,9 @@
+#!/bin/bash -l
+#SBATCH --gres=gpu:h200-1g.35gb
+cd $SLURM_SUBMIT_DIR
+
+/bin/hostname
+
+conda activate lgd2
+
+python pretrain.py --cfg cfg/ogbg-molhiv_eren_yeni.yaml  --repeat 5 wandb.use False

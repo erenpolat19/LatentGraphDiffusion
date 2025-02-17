@@ -212,6 +212,7 @@ def load_dataset_master(format, name, dataset_dir):
             return dataset
         if name.startswith('ogbg'):
             print(dataset_dir, name)
+            print('AGA')
             dataset = preformat_OGB_Graph(dataset_dir, name.replace('_', '-'))
             # for debug
             # for i in dataset.split_idxs[2]:

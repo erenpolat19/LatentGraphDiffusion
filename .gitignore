@@ -1,2 +1,5 @@
 dataset/
 datasets/
+results/
+*.out
+environment.yml

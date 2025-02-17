@@ -80,7 +80,7 @@ posenc_ERN: # HERE
 posenc_ERE: # HERE
   enable:
 encoder:
-  model_type: AtomEncoder
+  model_type: GraphTransformerStructureEncoder
   in_dim: 48
   prefix_dim: 96
   posenc_in_dim: 16
@@ -228,12 +228,3 @@ gnn: # decoder --> san_graph = MLP + pooling
   dropout: 0.0
   agg: mean
   normalize_adj: False
-optim:
-  clip_grad_norm: True
-  optimizer: adamW
-  weight_decay: 1e-5
-  base_lr: 1e-4
-  max_epoch: 3000
-  num_warmup_epochs: 50
-  scheduler: cosine_with_warmup
-  min_lr: 1e-6

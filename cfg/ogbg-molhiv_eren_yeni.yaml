@@ -22,17 +22,17 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: Atom #Atom+RWSE or Atom+LapPe etc
-  node_encoder_num_types: 9  # for remove_h #FIND OUT THIS
+  node_encoder_name: TypeDictNode
+  node_encoder_num_types: 9  # for remove_h
   node_encoder_bn: False
   edge_encoder: True
-  edge_encoder_name: Bond #BOND
-  edge_encoder_num_types: 3  # actually do not have aromatic bonds #FIND OUT THIS
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 3  # actually do not have aromatic bonds
   edge_encoder_bn: False
-  add_virtual_node_edge: False 
+  add_virtual_node_edge: False
   subgraph: False
   remove_h: True
-  split_index: 0 # TOOK FROM CALLIE -eren
+  split_index: -1 # -eren Making this -1 bc i want to use tyhe default splitidx, dont know if would work
 posenc_LapPE: #TOOK FROM GRAPHGPS -eren
   enable: False #True
   eigen:
@@ -44,14 +44,6 @@ posenc_LapPE: #TOOK FROM GRAPHGPS -eren
   layers: 3
   n_heads: 4  # Only used when `posenc.model: Transformer`
   raw_norm_type: none
-  spd: Falsep
-posenc_RWSE: #I looked at GraphGPS -eren
-  enable: False #True
-  kernel:
-    times_func: range(1,17)
-  model: Linear
-  dim_pe: 16
-  raw_norm_type: BatchNorm
   spd: False
 train:
   mode: pretrain_encoder
@@ -72,7 +64,8 @@ train:
     input_target: False
     node_factor: 1.0
     edge_factor: 1.0
-    graph_factor: 0.0 #WHAT IS THIS (OH NOW I KNOW ITS GRAPH LEVEL TASK. node, edge level reconstruction is for the ones above-eren)
+    graph_factor: 0.0
+    atom_bond_only: True
 pretrained:
   dir:
 model:
@@ -81,7 +74,7 @@ model:
   edge_decoding: dot
   graph_pooling: add
 posenc_RRWP:
-  enable: False #True
+  enable: True
   ksteps: 16
   spd: False
 prep:
@@ -93,8 +86,8 @@ posenc_ERE: # HERE
   enable:
 encoder:
   model_type: GraphTransformerStructureEncoder
-  in_dim: 48 #FIGURE THIS OUT
-  prefix_dim: 96 #FIGURE THIS OUT
+  in_dim: 48 # assert cfg.in_dim + cfg.posenc_dim == cfg.hid_dim
+  prefix_dim: 96
   posenc_in_dim: 16
   posenc_in_dim_edge: 16
   posenc_dim: 48
@@ -113,7 +106,7 @@ encoder:
     clamp: 5.
     act: 'relu'
     full_attn: True
-    edge_enhance: True
+    edge_enhance: False #EREN KESIN DEGISTIR BUNU GERI TRUE YA, sadece bugfix icin cevirdim
     O_e: True
     norm_e: True
     fwl: False
@@ -129,7 +122,7 @@ encoder:
     enable: True
     act: 'relu'
     dropout: 0.2
-    edge_enhance: True
+    edge_enhance: False #EREN KESIN DEGISTIR BUNU GERI TRUE YA, sadece bugfix icin cevirdim
     project_edge: True
   residual: True
   layer_norm: False
@@ -151,12 +144,12 @@ encoder:
   task_type: classification
   # num_classes: only for classification
   node_encoder: True
-  node_encoder_name: Atom #AGAIN THIS MIGHT CHANGE TO ATOM+LAPPE ETC
-  node_encoder_num_types: 9
+  node_encoder_name: TypeDictNode 
+  node_encoder_num_types: 9  # for remove_h
   node_encoder_bn: False
   edge_encoder: True
-  edge_encoder_name: Bond
-  edge_encoder_num_types: 3 
+  edge_encoder_name: TypeDictEdge
+  edge_encoder_num_types: 3  # actually do not have aromatic bonds
   edge_encoder_bn: False
   add_virtual_node_edge: False
 gt:
@@ -167,7 +160,7 @@ gt:
   dropout: 0.0
   layer_norm: False
   batch_norm: True
-  
+#  bn_momentum: 0.01
   update_e: True
   attn_dropout: 0.2
   attn:
@@ -197,3 +190,7 @@ optim:
   num_warmup_epochs: 50
   scheduler: cosine_with_warmup
   min_lr: 1e-6
+  reduce_factor: 0.5 # -eren idk what s the right one
+  schedule_patience: 15 # -eren idk what s the right one
+  batch_accumulation: 1 # -eren idk
+  

@@ -33,7 +33,7 @@ from lgd.finetuning import load_pretrained_model_cfg, \
     init_model_from_pretrained
 
 from lgd.model.GraphTransformerEncoder import GraphTransformerEncoder # HERE 
-
+from lgd.train.pretrain_encoder import *
 #
 # parser = argparse.ArgumentParser()
 # parser.add_argument("--dataset", type=str, default="zinc12")
@@ -299,6 +299,7 @@ if __name__ == '__main__':
             datamodule = GraphGymDataModule()
             train(model, datamodule, logger=True)
         else:
+            print(train_dict)
             train_dict[cfg.train.mode](loggers, loaders, model, optimizer,
                                        scheduler)
     # Aggregate results from different seeds

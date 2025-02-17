@@ -21,7 +21,7 @@ from torch_geometric.graphgym.models.layer import (new_layer_config,
 from torch_geometric.graphgym.register import register_network
 import warnings
 from .utils import *
-
+from lgd.encoder.type_dict_encoder import *
 
 # from watchpoints import watch
 # watch.config(pdb=True)
@@ -1210,8 +1210,10 @@ class GraphTransformerStructureEncoder(nn.Module):
         if cfg.node_encoder_name == 'Embedding':
             self.node_emb = nn.Embedding(self.node_dict_dim, self.in_dim, padding_idx=0)
         else:
+            print(register.node_encoder_dict)
             NodeEncoder = register.node_encoder_dict[cfg.node_encoder_name]
             self.node_emb = NodeEncoder(self.in_dim)
+
         if cfg.edge_encoder_name == 'Embedding':
             self.edge_emb = nn.Embedding(self.edge_dict_dim, self.in_dim, padding_idx=0)
         else:
