@@ -300,7 +300,7 @@ def pretransform_pe(data, add_virtual_node=False):
         pestat_node = torch.cat(pestat_node, dim=-1)
         data.pestat_node = pestat_node
     if add_virtual_node:
-        if pestat_node:
+        if pestat_node is not None and pestat_node.numel() > 0:  # After concatenation   was 'if pestat_node': -eren CHANGE
             data.pestat_node = torch.cat([data.pestat_node, torch.zeros([1, pestat_node.shape[1]], dtype=torch.float)], dim=0)
 
         for pename in ['rrwp_edge']:

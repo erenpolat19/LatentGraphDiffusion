@@ -98,6 +98,9 @@ class TypeDictNodeEncoder(torch.nn.Module):
     def forward(self, x):
         if isinstance(x, torch.Tensor):
             # Encode just the first dimension if more exist
+            print('aga hadi', 'x shape', x.shape, 'num_embeddings', self.encoder.num_embeddings, 'embedding_dim' ,self.encoder.embedding_dim)
+            print('max index', x.max())  # Check the max index in the input tensorp
+            print(x)
             x = self.encoder(x[:, 0])
         else:
             x.x = self.encoder(x.x[:, 0])

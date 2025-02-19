@@ -104,33 +104,36 @@ def concat_node_encoders(encoder_classes, pe_enc_names, edge=False):
 
 
 # Dataset-specific node encoders.
-ds_encs = {'Atom': AtomEncoder,
-           'ASTNode': ASTNodeEncoder,
-           'PPANode': PPANodeEncoder,
-           'TypeDictNode': TypeDictNodeEncoder,
-           'VOCNode': VOCNodeEncoder,
-           'LinearNode': LinearNodeEncoder}
+# ds_encs = {'Atom': AtomEncoder,
+#            'ASTNode': ASTNodeEncoder,
+#            'PPANode': PPANodeEncoder,
+#            'TypeDictNode': TypeDictNodeEncoder,
+#            'VOCNode': VOCNodeEncoder,
+#            'LinearNode': LinearNodeEncoder}
 
+ds_encs = {'Atom': AtomEncoder}
 # Positional Encoding node encoders.
-pe_encs = {'LapPE': LapPENodeEncoder,
-           'RWSE': RWSENodeEncoder,
-           'HKdiagSE': HKdiagSENodeEncoder,
-           'ElstaticSE': ElstaticSENodeEncoder,
-           'SignNet': SignNetNodeEncoder,
-           'EquivStableLapPE': EquivStableLapPENodeEncoder,
-           'InterRWSE_Node': InterRWSENodeEncoder}
+# pe_encs = {'LapPE': LapPENodeEncoder,
+#            'RWSE': RWSENodeEncoder,
+#            'HKdiagSE': HKdiagSENodeEncoder,
+#            'ElstaticSE': ElstaticSENodeEncoder,
+#            'SignNet': SignNetNodeEncoder,
+#            'EquivStableLapPE': EquivStableLapPENodeEncoder,
+#            'InterRWSE_Node': InterRWSENodeEncoder}
+pe_encs = {'RWSE': RWSENodeEncoder}
 
-ds_edge_encs = {'Bond': BondEncoder,
-                'ASTEdge': ASTEdgeEncoder,
-                'PPAEdge': PPAEdgeEncoder,
-                'TypeDictEdge': TypeDictEdgeEncoder,
-                'VOCEdge': VOCEdgeEncoder,
-                'LinearEdge': LinearEdgeEncoder,
-                'DummyEdge': DummyEdgeEncoder}
-
-pe_edge_encs = {'HodgeLap1PE': HodgeLap1PEEdgeEncoder,
-                'EdgeRWSE': EdgeRWSEEdgeEncoder,
-                'InterRWSE_Edge': InterRWSEEdgeEncoder}
+# ds_edge_encs = {'Bond': BondEncoder,
+#                 'ASTEdge': ASTEdgeEncoder,
+#                 'PPAEdge': PPAEdgeEncoder,
+#                 'TypeDictEdge': TypeDictEdgeEncoder,
+#                 'VOCEdge': VOCEdgeEncoder,
+#                 'LinearEdge': LinearEdgeEncoder,
+#                 'DummyEdge': DummyEdgeEncoder}
+ds_edge_encs = {'Bond': BondEncoder}
+# pe_edge_encs = {'HodgeLap1PE': HodgeLap1PEEdgeEncoder,
+#                 'EdgeRWSE': EdgeRWSEEdgeEncoder,
+#                 'InterRWSE_Edge': InterRWSEEdgeEncoder}
+pe_edge_encs = {}
 
 # Concat dataset-specific and PE encoders.
 for ds_enc_name, ds_enc_cls in ds_encs.items():

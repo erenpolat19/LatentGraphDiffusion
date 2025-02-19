@@ -3,3 +3,5 @@ datasets/
 results/
 *.out
 environment.yml
+*.log
+*.job

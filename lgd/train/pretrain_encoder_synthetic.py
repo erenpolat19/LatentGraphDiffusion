@@ -55,7 +55,7 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
             pred.edge_attr = pred.edge_attr.detach()
             pred.graph_attr = pred.graph_attr.detach()
         node_pred, edge_pred, graph_pred = model.model.decode(pred)
-
+        
         # criterion_node = nn.CrossEntropyLoss()
         criterion_edge = nn.CrossEntropyLoss()
         # TODO: the original task loss should be modified; L1Loss works for zinc, PCQM4Mv2 and QM9

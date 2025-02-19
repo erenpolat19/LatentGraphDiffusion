@@ -15,6 +15,7 @@ from lgd.loss.subtoken_prediction_loss import subtoken_cross_entropy
 from lgd.asset.utils import cfg_to_dict, flatten_dict, make_wandb_name, mlflow_log_cfgdict
 from copy import deepcopy
 import warnings
+import torch.nn.functional as F
 from utils import random_mask
 
 
@@ -49,10 +50,12 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
             input_label = (input_label, masked_label_idx)
         pred = model(batch, label=input_label)
         if visualize and iter == 0:
-            logging.info(node_label[:20])
-            logging.info(pred.x[:20])
-            logging.info(edge_label[:20])
-            logging.info(pred.edge_attr[:20])
+            # logging.info('haci abi')
+            # logging.info(f'node_label[:20]: {node_label[:20]}')
+            # logging.info(f'pred.x[:20]: {pred.x[:20]}')
+            # logging.info(f'edge_label[:20]: {edge_label[:20]}')
+            # logging.info(f'pred.edge_attr[:20]: {pred.edge_attr[:20]}')
+            pass
         if cfg.train.pretrain.get("freeze_encoder", False):
             pred.x = pred.x.detach()
             pred.edge_attr = pred.edge_attr.detach()
@@ -70,17 +73,47 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
         criterion_edge = nn.CrossEntropyLoss()
         # TODO: the original task loss should be modified; L1Loss works for zinc, PCQM4Mv2 and QM9
         assert cfg.train.pretrain.recon in ['all', 'masked', 'none']
-        loss_node = criterion_node(node_pred, node_label) if cfg.train.pretrain.recon == 'all' \
+        
+
+        # if cfg.dataset.name == 'ogbg-molhiv': -this was my code, commented it -EREN
+        #     node_pred = node_pred.view(-1)
+            # edge_pred = edge_pred.view(-1)
+
+
+        #little test -eren
+        # print('node_pred', node_pred.shape, 'node_label', node_label.shape)
+        # print('recon', cfg.train.pretrain.recon, 'node_pred', node_pred.shape, 'node_label', node_label.shape)
+        node_recon, edge_recon, tuple_recon, node_pe_recon, edge_pe_recon = model.model.decode_recon(pred)
+        # print(f'node_recon {node_recon.shape}, edge_recon {edge_recon.shape}, tuple_recon {tuple_recon.shape}, node_pe_recon {node_pe_recon.shape}, edge_pe_recon {edge_pe_recon.shape}')
+        tuple_label = tuple_label_dict[node_label[batch.edge_index[0]], node_label[batch.edge_index[1]]]
+        
+        #node label shape mismatch CHANGE -eren
+        num_classes = node_pred.shape[1]  # 130 classes
+        node_label_one_hot = F.one_hot(node_label, num_classes=num_classes).float()
+
+        if cfg.dataset.name == 'ogbg-molhiv': #change -eren
+            loss_node = criterion_node(node_pred, node_label_one_hot) if cfg.train.pretrain.recon == 'all' \
             else criterion_node(node_pred[masked_node_idx], node_label[masked_node_idx])
+        else:
+            loss_node = criterion_node(node_pred, node_label) if cfg.train.pretrain.recon == 'all' \
+                else criterion_node(node_pred[masked_node_idx], node_label[masked_node_idx])
+
         loss_edge = criterion_edge(edge_pred, edge_label) if cfg.train.pretrain.recon == 'all' \
             else criterion_edge(edge_pred[masked_edge_idx], edge_label[masked_edge_idx])
         if hasattr(model.model, 'decode_recon') and callable(model.model.decode_recon):
             node_recon, edge_recon, tuple_recon, node_pe_recon, edge_pe_recon = model.model.decode_recon(pred)
+            # print(node_label[batch.edge_index[0]])
             tuple_label = tuple_label_dict[node_label[batch.edge_index[0]], node_label[batch.edge_index[1]]] #.flatten()
-
-            loss_structure_recon = criterion_node(node_recon, node_label) * cfg.train.pretrain.get('node_factor', 1.0) \
-                                 + criterion_edge(edge_recon, edge_label) * cfg.train.pretrain.edge_factor \
-                                 + criterion_node(tuple_recon, tuple_label) * cfg.train.pretrain.edge_factor
+            
+            if cfg.dataset.name == 'ogbg-molhiv':#change -eren
+                loss_structure_recon = criterion_node(node_recon, node_label_one_hot) * cfg.train.pretrain.get('node_factor', 1.0) \
+                    + criterion_edge(edge_recon, edge_label) * cfg.train.pretrain.edge_factor \
+                    + criterion_node(tuple_recon, tuple_label) * cfg.train.pretrain.edge_factor
+            else:
+                loss_structure_recon = criterion_node(node_recon, node_label) * cfg.train.pretrain.get('node_factor', 1.0) \
+                    + criterion_edge(edge_recon, edge_label) * cfg.train.pretrain.edge_factor \
+                    + criterion_node(tuple_recon, tuple_label) * cfg.train.pretrain.edge_factor
+            
             if batch.get('pestat_node', None) is not None:
                 loss_structure_recon = loss_structure_recon + nn.MSELoss(reduction='mean')(node_pe_recon, batch.get('pestat_node'))
             if batch.get('pestat_edge', None) is not None:
@@ -144,6 +177,8 @@ def eval_epoch(logger, loader, model, split='val', repeat=1, ensemble_mode='none
             if ensemble_mode == 'none':
                 # pred, true = model(batch)
                 node_label, edge_label, graph_label = batch.x.clone().detach(), batch.edge_attr.clone().detach(), batch.y
+                
+
                 if cfg.train.pretrain.input_target:
                     batch_1 = copy.deepcopy(batch)
                     input_label = batch_1.y.clone().detach()
@@ -156,19 +191,36 @@ def eval_epoch(logger, loader, model, split='val', repeat=1, ensemble_mode='none
                     loss_labeled, _ = compute_loss(graph_pred_, batch_1.y)
                 pred = model(batch, label=None)
                 node_pred, edge_pred, graph_pred = model.model.decode(pred)
+
+                #eren
+                if not cfg.train.pretrain.atom_bond_only:
+                    node_label = node_label[:, 0].flatten()
+                    edge_label = edge_label[:, 0].flatten()
+                num_classes = node_pred.shape[1]  # 130 classes
+                node_label_one_hot = F.one_hot(node_label, num_classes=num_classes).float()
+                #-
                 if cfg.dataset.format == 'PyG-QM9':
                     graph_pred = graph_pred * batch.get('y_std', 1.) + batch.get('y_mean', 0.)
                 if cfg.train.pretrain.recon != 'none':
                     node_label, edge_label = node_label.flatten(), edge_label.flatten()
                     criterion_node = nn.CrossEntropyLoss()
                     criterion_edge = nn.CrossEntropyLoss()
-                    loss_node = criterion_node(node_pred, node_label)
+                    #print('node_label', node_label.shape, 'node_pred', node_pred.shape, 'node_label_one_hot',node_label_one_hot)
+                    if cfg.dataset.name == 'ogbg-molhiv': #change -eren
+                        loss_node = criterion_node(node_pred, node_label_one_hot)
+                    else:
+                        loss_node = criterion_node(node_pred, node_label)
                     loss_edge = criterion_edge(edge_pred, edge_label)
                     loss_recon = loss_node * cfg.train.pretrain.get('node_factor', 1.0) + loss_edge * cfg.train.pretrain.edge_factor
                     if hasattr(model.model, 'decode_recon') and callable(model.model.decode_recon):
                         node_recon, edge_recon, tuple_recon, node_pe_recon, edge_pe_recon = model.model.decode_recon(pred)
+                        if cfg.dataset.name == 'ogbg-molhiv': #change -eren
+                            loss_structure_recon_node = criterion_node(node_recon, node_label_one_hot)
+                        else:
+                            loss_structure_recon_node = criterion_node(node_recon, node_label)
+
                         tuple_label = tuple_label_dict[node_label[batch.edge_index[0]], node_label[batch.edge_index[1]]].flatten()
-                        loss_structure_recon_node = criterion_node(node_recon, node_label)
+                        
                         loss_structure_recon_edge = criterion_edge(edge_recon, edge_label)
                         loss_structure_recon_tuple = criterion_node(tuple_recon, tuple_label)
                         if batch.get('pestat_node', None) is not None:

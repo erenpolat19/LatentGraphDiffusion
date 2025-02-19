@@ -387,6 +387,7 @@ def load_dataset_master(format, name, dataset_dir):
 
     # Set standard dataset train/val/test splits
     if hasattr(dataset, 'split_idxs'):
+        print('standard a girdi haci abi')
         set_dataset_splits(dataset, dataset.split_idxs)
         delattr(dataset, 'split_idxs')
 

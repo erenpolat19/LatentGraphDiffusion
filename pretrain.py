@@ -34,6 +34,7 @@ from lgd.finetuning import load_pretrained_model_cfg, \
 
 from lgd.model.GraphTransformerEncoder import GraphTransformerEncoder # HERE 
 from lgd.train.pretrain_encoder import *
+from lgd.encoder.atom_bond_encoder import *
 #
 # parser = argparse.ArgumentParser()
 # parser.add_argument("--dataset", type=str, default="zinc12")
@@ -267,6 +268,10 @@ if __name__ == '__main__':
         cfg.run_id = run_id
         seed_everything(cfg.seed)
         auto_select_device()
+
+        # cfg.accelerator = 'cpu' #-eren
+        # cfg.devices = None
+
         # TODO: debug loader and dataset
         # dataset = load_dataset_master(cfg.dataset.format, cfg.dataset.name, cfg.dataset.dataset_dir) # HERE - uncommented this line
         if cfg.pretrained.dir:
@@ -299,7 +304,7 @@ if __name__ == '__main__':
             datamodule = GraphGymDataModule()
             train(model, datamodule, logger=True)
         else:
-            print(train_dict)
+            #print(train_dict)
             train_dict[cfg.train.mode](loggers, loaders, model, optimizer,
                                        scheduler)
     # Aggregate results from different seeds

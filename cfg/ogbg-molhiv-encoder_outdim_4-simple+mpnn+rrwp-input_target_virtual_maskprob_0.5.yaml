@@ -1,17 +1,10 @@
 # Original:  zinc-GRIT-2000.yaml
 out_dir: results
-metric_best: mae
-metric_agg: argmin
+metric_best: auc
 tensorboard_each_run: False  # Log to Tensorboard each run
-#accelerator: "cuda:3"
-#device: "cuda:3"
 accelerator: "cuda:0"
+name_tag: ogbg-molhiv-orig
 run_multiple_splits: [] #FROM CALLIE -eren
-name_tag: ogbg-molhiv
-mlflow:
-  use: False
-  project: molhiv
-  name: molhiv
 wandb:
   use: False
   project: molhiv
@@ -22,71 +15,19 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  #node_encoder_name: TypeDictNode
-  node_encoder_name: Atom_pad
-  node_encoder_num_types: 9  # for remove_h # it was 9
+  node_encoder_name: Atom_pad #was atom, getting error
+  node_encoder_num_types: 120
   node_encoder_bn: False
   edge_encoder: True
-  #edge_encoder_name: TypeDictEdge
-  edge_encoder_name: Bond_pad
-  edge_encoder_num_types: 3  # actually do not have aromatic bonds
+  edge_encoder_name: Bond_pad #was bond, getting error
+  edge_encoder_num_types: 5
   edge_encoder_bn: False
-  add_virtual_node_edge: False
+  add_virtual_node_edge: True #False yaptik cabuk baslasin diye -eren
   subgraph: False
-  remove_h: True
-  split_index: 0 # -eren Making this -1 bc i want to use tyhe default splitidx, dont know if would work
-posenc_RWSE: 
-  enable: True #-eren made it false to run faster
-  kernel:
-    times_func: range(1,17)
-  model: Linear
-  dim_pe: 16
-  raw_norm_type: BatchNorm
-posenc_EquivStableLapPE:
-  enable: False
-posenc_LapPE:
-  enable: False #-eren made it false to run faster
-  eigen:
-    laplacian_norm: sym
-    eigvec_norm: L2
-    max_freqs: 10
-  model: Transformer
-  dim_pe: 16
-  layers: 3
-  n_heads: 4  # Only used when `posenc.model: Transformer`
-  raw_norm_type: none
-train:
-  mode: pretrain_encoder
-  batch_size: 128
-  eval_period: 1
-  enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
-  ckpt_best: False  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
-  ckpt_clean: False # Delete old ckpt each time.
-  ckpt_period: 10
-  ensemble_repeat: 1
-  ensemble_mode: none
-  pretrain: #figure this part OUT -EREN
-    mask_node_prob: 0.0
-    mask_edge_prob: 0.0
-    mask_label_prob: 0.0
-    recon: all
-    original_task: False 
-    input_target: False 
-    node_factor: 1.0 
-    edge_factor: 1.0
-    graph_factor: 0.0
-    atom_bond_only: True
+  split_mode: 'standard'
+  split_index: 0
 pretrained:
   dir:
-model:
-  type: GraphTransformerStructureEncoder
-  loss_fun: l1
-  edge_decoding: dot
-  graph_pooling: add
-posenc_RRWP:
-  enable: False # - eren made it false to run faster in beginning
-  ksteps: 16
-  spd: False
 prep:
   exp: # HERE
   dist_enable: # HERE
@@ -94,24 +35,52 @@ posenc_ERN: # HERE
   enable: 
 posenc_ERE: # HERE
   enable:
+train:
+  mode: pretrain_encoder
+  batch_size: 256 #was 256, changed for trace -eren
+  eval_period: 1
+  enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
+  ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
+  ckpt_clean: False # Do not delete old ckpt each time.
+  ckpt_period: 10
+  ensemble_repeat: 1
+  ensemble_mode: none
+  pretrain:
+    mask_node_prob: 0.0 
+    mask_edge_prob: 0.0
+    mask_label_prob: 0.5
+    recon: all
+    original_task: True #graph level classification loss is added (loss + loss_graph * cfg.train.pretrain.graph_factor)
+    input_target: True #determines whether label information should be used as additional input during pretraining
+    node_factor: 1.0 #loss for node, edge, graph level pred
+    edge_factor: 1.0
+    graph_factor: 1.0
+    atom_bond_only: False #was false -eren only keeps the first dimension, meaning oonnnly the atom number (node_label = node_label[:, 0].flatten())
+            
+           
+model:
+  type: GraphTransformerStructureEncoder
+  loss_fun: cross_entropy
+  edge_decoding: dot
+  graph_pooling: mean
+posenc_RRWP:
+  enable: True #-eren False yapsak mi, yaptik
+  ksteps: 16
 encoder:
   model_type: GraphTransformerStructureEncoder
-  in_dim: 48 # assert cfg.in_dim + cfg.posenc_dim == cfg.hid_dim
-  prefix_dim: 96
+  in_dim: 40
+  prefix_dim: 64
   posenc_in_dim: 16
   posenc_in_dim_edge: 16
-  posenc_dim: 48
-  # posenc_in_dim: 0
-  # posenc_in_dim_edge: 0
-  # posenc_dim: 0
+  posenc_dim: 24
   pe_raw_norm: None
-  hid_dim: 96
-  out_dim: 32
+  hid_dim: 64
+  out_dim: 4
   use_time: False
   temb_dim: 0
   num_heads: 4
-  num_layers: 5
-  dropout: 0.2
+  num_layers: 10
+  dropout: 0.05
   attn_dropout: 0.5
   bn_momentum: 0.1
   bn_no_runner: False
@@ -119,12 +88,12 @@ encoder:
     clamp: 5.
     act: 'relu'
     full_attn: True
-    edge_enhance: True #EREN KESIN DEGISTIR BUNU GERI TRUE YA, sadece bugfix icin cevirdim
+    edge_enhance: True -eren False yaptik
     O_e: True
     norm_e: True
     fwl: False
     signed_sqrt: True
-    score_act: True
+    score_act: False
     deg_scaler: False
     attn_product: mul
     attn_reweight: False
@@ -134,8 +103,8 @@ encoder:
   mpnn:
     enable: True
     act: 'relu'
-    dropout: 0.2
-    edge_enhance: True #EREN KESIN DEGISTIR BUNU GERI TRUE YA, sadece bugfix icin cevirdim
+    dropout: 0.05
+    edge_enhance: True -eren False yaptik
     project_edge: True
   residual: True
   layer_norm: False
@@ -143,32 +112,27 @@ encoder:
   act: 'relu'
   norm_e: True
   O_e: True
-  ff_e: True
+  ff_e: False
   update_e: True
   force_undirected: True
   pool: mean
   pool_edge: True
   pool_vn: False
-  post_pool: False
+  post_pool: True
   final_norm: True
-  prefix_type: add_all
-  label_embed_type: add_all
+  prefix_type: add_virtual
+  label_embed_type: add_virtual
   num_task: 1
   task_type: classification
-  # num_classes: only for classification
+  num_classes: 2
   node_encoder: True
-  #node_encoder_name: TypeDictNode
-  node_encoder_name: Atom_pad
-  node_encoder_num_types: 9  # for remove_h # it was 9
+  node_encoder_name: Atom_pad #was atom, getting an error
+  node_encoder_num_types: 120
   node_encoder_bn: False
   edge_encoder: True
-  #edge_encoder_name: TypeDictEdge
-  edge_encoder_name: Bond_pad
-  edge_encoder_num_types: 3  # actually do not have aromatic bonds
+  edge_encoder_name: Bond_pad #was bond, getting an error
+  edge_encoder_num_types: 5
   edge_encoder_bn: False
-  add_virtual_node_edge: False
-pecfg:
-  layers: 3
 gt:
   layer_type: GritTransformer
   layers: 10
@@ -184,7 +148,7 @@ gt:
     clamp: 5.
     act: 'relu'
     full_attn: True
-    edge_enhance: True
+    edge_enhance: True -eren false yaptik
     O_e: True
     norm_e: True
     fwl: False
@@ -198,16 +162,22 @@ gnn: # decoder --> san_graph = MLP + pooling
   dropout: 0.0
   agg: mean
   normalize_adj: False
+posenc_RWSE:
+  enable: False
+  kernel:
+    times_func: range(1,21)
+  model: Linear
+  dim_pe: 28
+  raw_norm_type: BatchNorm
 optim:
   clip_grad_norm: True
   optimizer: adamW
   weight_decay: 1e-5
-  base_lr: 1e-3
-  max_epoch: 500
-  num_warmup_epochs: 50
+  base_lr: 0.0001
+  max_epoch: 100
+  num_warmup_epochs: 10
   scheduler: cosine_with_warmup
   min_lr: 1e-6
   reduce_factor: 0.5 # -eren idk what s the right one
   schedule_patience: 15 # -eren idk what s the right one
   batch_accumulation: 1 # -eren idk
-  
