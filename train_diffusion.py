@@ -29,7 +29,10 @@ from lgd.finetuning import load_pretrained_model_cfg, \
     init_model_from_pretrained
 from lgd.ddpm.LGD import DDPM, LatentDiffusion
 from lgd.ddpm.LGD_Inductive import LatentDiffusionInductive
-
+from lgd.train.pretrain_encoder import *
+from lgd.encoder.atom_bond_encoder import *
+from lgd.model.GraphTransformerEncoder import GraphTransformerEncoder # HERE 
+from lgd.train.train_diffusion import *
 
 def new_optimizer_config(cfg):
     return OptimizerConfig(optimizer=cfg.optim.optimizer,
@@ -60,6 +63,9 @@ def custom_set_out_dir(cfg, cfg_fname, name_tag):
     """
     run_name = os.path.splitext(os.path.basename(cfg_fname))[0]
     run_name += f"-{name_tag}" if name_tag else ""
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    run_name += f"-{timestamp}"
+
     cfg.out_dir = os.path.join(cfg.out_dir, run_name)
 
 

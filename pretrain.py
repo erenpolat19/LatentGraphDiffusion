@@ -196,6 +196,8 @@ def custom_set_out_dir(cfg, cfg_fname, name_tag):
     """
     run_name = os.path.splitext(os.path.basename(cfg_fname))[0]
     run_name += f"-{name_tag}" if name_tag else ""
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    run_name += f"-{timestamp}"
     cfg.out_dir = os.path.join(cfg.out_dir, run_name)
 
 

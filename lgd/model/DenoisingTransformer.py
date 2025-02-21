@@ -142,8 +142,8 @@ class Cross_Attention(nn.Module):
             if type == 'share':
                 src_h = batch.K.unsqueeze(0).repeat(num_nodes, 1, 1, 1)  # num_nodes in batch x n_prompt x num_heads x out_dim
                 src_e = batch.K.unsqueeze(0).repeat(num_edges, 1, 1, 1)  # num_edges in batch x n_prompt x num_heads x out_dim
-                v_h = batch.V.unsuqeeze(0).repeat(num_nodes, 1, 1, 1).reshape(-1, self.num_heads, self.out_dim)
-                v_e = batch.V.unsuqeeze(0).repeat(num_edges, 1, 1, 1).reshape(-1, self.num_heads, self.out_dim)
+                v_h = batch.V.unsqueeze(0).repeat(num_nodes, 1, 1, 1).reshape(-1, self.num_heads, self.out_dim)
+                v_e = batch.V.unsqueeze(0).repeat(num_edges, 1, 1, 1).reshape(-1, self.num_heads, self.out_dim)
             else:
                 # TODO: preprocess the num_node_per_graph (including virtual nodes)
                 batch_node = batch.batch_node_idx  # num2batch(batch.num_node_per_graph)
@@ -221,7 +221,7 @@ class Cross_Attention(nn.Module):
             batch.V = V.view(V.shape[0], V.shape[1], self.num_heads, self.out_dim)  # batchsize x n_prompt x num_heads x out_dim
             batch.K_e = self.E2(prompt).view(K.shape[0], K.shape[1], self.num_heads, self.out_dim)
             batch.V_e = self.H(prompt).view(V.shape[0], V.shape[1], self.num_heads, self.out_dim)
-        elif len(prompt.shape) == 2:
+        elif len(prompt.shape) == 2: #i think prompt_graph enters here'
             type = 'share'
             batch.K = K.view(-1, self.num_heads, self.out_dim)  # n_prompt x num_heads x out_dim
             batch.V = V.view(-1, self.num_heads, self.out_dim)  # n_prompt x num_heads x out_dim
@@ -725,6 +725,9 @@ class DenoisingTransformer(nn.Module):
 
         h = self.node_in_mlp(batch.x)
         e = self.edge_in_mlp(batch.edge_attr)
+        print('prompt', prompt)
+        print('len prompt', len(prompt))
+
         if 'masked_graph' in self.condition_list:  # TODO: prompt_graph, how to process? the hidden_dim are different too
             prompt_h0, prompt_e0, prompt_g0 = prompt
             prompt_h = self.cond_in_mlp(prompt_h0)

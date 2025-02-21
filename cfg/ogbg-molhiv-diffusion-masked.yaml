@@ -1,0 +1,229 @@
+out_dir: results
+metric_best: auc
+name_tag: masked-molhiv
+run_multiple_splits: [] #FROM CALLIE -eren
+accelerator: "cuda:0"
+wandb:
+  use: False
+  project: molhiv
+dataset:
+  format: OGB
+  name: ogbg-molhiv
+  task: graph
+  task_type: classification
+  transductive: False
+  node_encoder: True
+  node_encoder_name: Atom_pad
+  node_encoder_num_types: 120
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: Bond_pad
+  edge_encoder_num_types: 5
+  edge_encoder_bn: False
+  add_virtual_node_edge: True #-eren
+  subgraph: False
+  split_mode: 'standard'
+  split_index: 0
+train:
+  mode: train_diffusion
+  batch_size: 256
+  eval_period: 10
+  enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
+  ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
+  ckpt_clean: True
+  ensemble_repeat: 1
+  ensemble_mode: none
+  pretrain:
+    mask_node_prob: 0.0
+    mask_edge_prob: 0.0
+    mask_label_prob: 0.5
+    recon: all
+    original_task: True
+    input_target: True
+    node_factor: 1.0
+    edge_factor: 1.0
+    graph_factor: 1.0
+    atom_bond_only: False
+pretrained: # HERE
+  dir:
+prep:
+  exp: # HERE
+  dist_enable: # HERE
+posenc_ERN: # HERE
+  enable: 
+posenc_ERE: # HERE
+  enable:
+model:
+  type: LatentDiffusion
+  loss_fun: cross_entropy
+  edge_decoding: dot
+  graph_pooling: mean
+posenc_RRWP:
+  enable: True #-eren
+  ksteps: 16
+encoder:
+  model_type: GraphTransformerStructureEncoder
+  in_dim: 40
+  prefix_dim: 64
+  posenc_in_dim: 16
+  posenc_in_dim_edge: 16
+  posenc_dim: 24
+  pe_raw_norm: None
+  hid_dim: 64
+  out_dim: 4
+  use_time: False
+  temb_dim: 0
+  num_heads: 4
+  num_layers: 10
+  dropout: 0.05
+  attn_dropout: 0.5
+  bn_momentum: 0.1 #HERE
+  bn_no_runner: False #HERE
+
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True #-eren
+    O_e: True
+    norm_e: True
+    fwl: False
+    signed_sqrt: True
+    score_act: False
+    deg_scaler: False
+    attn_product: mul
+    attn_reweight: False
+    edge_reweight: False
+    bn_momentum: 0.1 # HERE
+    bn_no_runner: False
+  mpnn:
+    enable: True
+    act: 'relu'
+    dropout: 0.05
+    edge_enhance: True #-eren
+    project_edge: True
+  residual: True
+  layer_norm: False
+  batch_norm: True
+  act: 'relu'
+  norm_e: True
+  O_e: True
+  ff_e: False
+  update_e: True
+  force_undirected: True
+  pool: mean
+  pool_edge: True
+  pool_vn: False
+  post_pool: True
+  final_norm: True
+  prefix_type: add_virtual
+  label_embed_type: add_virtual
+  num_task: 1
+  task_type: classification
+  num_classes: 2
+  node_encoder: True
+  node_encoder_name: Atom_pad
+  node_encoder_num_types: 120
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: Bond_pad
+  edge_encoder_num_types: 5
+  edge_encoder_bn: False
+  add_virtual_node_edge: True
+dt:
+  in_dim: 4  # should be the same as encoder.out_dim
+  hid_dim: 64
+  out_dim: 4
+  use_time: True
+  temb_dim: 64
+  cond_dim: 4
+  num_heads: 4
+  num_layers: 4
+  self_attn: False
+  dropout: 0.05
+  attn_dropout: 0.25
+  residual: True
+  layer_norm: True
+  batch_norm: False
+  act: 'relu'
+  bn_momentum: 0.1 #HERE
+  bn_no_runner: False #HERE
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: False
+    O_e: True
+    norm_e: True
+    fwl: False
+    signed_sqrt: True
+    score_act: False  # could try True
+    deg_scaler: False
+    attn_product: mul
+    attn_reweight: False
+    edge_reweight: False
+    bn_momentum: 0.1 #HERE
+    bn_no_runner: False #HERE
+  norm_e: True
+  O_e: True
+  ff_e: True
+  ff_e_ca: True
+  ff_e_sa: False  # could try True
+  pool: mean
+  pool_edge: True
+  pool_vn: False
+  post_pool: True
+  final_norm: True
+  condition_list: ['masked_graph']
+diffusion:
+  conditioning_key: crossattn
+  hid_dim: 4  # should be the same as dt.in_dim
+  cond_stage_key: masked_graph
+  first_stage_config: results/ogbg-molhiv-encoder-ogbg-molhiv-orig-2025-02-20_15-22-16/0/ckpt/0.ckpt
+  cond_stage_config: __is_first_stage__
+  node_factor: 1.0
+  edge_factor: 1.0 #
+  graph_factor: 1.0 #loss_graph = self.get_loss(batch_output.graph_attr, graph_attr_label, mean=False).mean([1])
+  task_factor: 1.0 #loss_task, graph_decode = compute_loss(graph_decode, batch.y.clone().detach())
+gt:
+  layer_type: CustomGatedGCN+Transformer
+  layers: 10
+  n_heads: 4
+  dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dropout: 0.05
+  attn_dropout: 0.5
+  layer_norm: False
+  batch_norm: True
+gnn:
+  head: san_graph
+  layers_pre_mp: 0
+  layers_post_mp: 3  # Not used when `gnn.head: san_graph`
+  dim_inner: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  batchnorm: True
+  act: relu
+  dropout: 0.0
+  agg: mean
+  normalize_adj: False
+optim:
+  clip_grad_norm: True
+  optimizer: adamW
+  weight_decay: 1e-5
+  base_lr: 0.0001
+  max_epoch: 500
+  scheduler: cosine_with_warmup
+  num_warmup_epochs: 20
+  min_lr: 1e-6
+  reduce_factor: 0.5
+  schedule_patience: 5
+  min_lr: 1e-6
+  batch_accumulation: 1
+# optim:
+#  clip_grad_norm: True
+#  optimizer: adamW
+#  weight_decay: 1e-5
+#  base_lr: 0.0001
+#  max_epoch: 100
+#  scheduler: reduce_on_plateau
+#  reduce_factor: 0.5
+#  schedule_patience: 5
+#  min_lr: 1e-6

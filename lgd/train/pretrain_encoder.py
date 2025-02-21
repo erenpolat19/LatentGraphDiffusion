@@ -48,7 +48,7 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
             if cfg.dataset.format == 'PyG-QM9':
                 input_label = (input_label - batch.y_mean) / batch.y_std
             input_label = (input_label, masked_label_idx)
-        pred = model(batch, label=input_label)
+        pred = model(batch, label=input_label) #pred is 
         if visualize and iter == 0:
             # logging.info('haci abi')
             # logging.info(f'node_label[:20]: {node_label[:20]}')
@@ -73,18 +73,14 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
         criterion_edge = nn.CrossEntropyLoss()
         # TODO: the original task loss should be modified; L1Loss works for zinc, PCQM4Mv2 and QM9
         assert cfg.train.pretrain.recon in ['all', 'masked', 'none']
-        
 
-        # if cfg.dataset.name == 'ogbg-molhiv': -this was my code, commented it -EREN
-        #     node_pred = node_pred.view(-1)
-            # edge_pred = edge_pred.view(-1)
 
 
         #little test -eren
-        # print('node_pred', node_pred.shape, 'node_label', node_label.shape)
+        #print('node_pred', node_pred.shape, 'node_label', node_label.shape)
         # print('recon', cfg.train.pretrain.recon, 'node_pred', node_pred.shape, 'node_label', node_label.shape)
         node_recon, edge_recon, tuple_recon, node_pe_recon, edge_pe_recon = model.model.decode_recon(pred)
-        # print(f'node_recon {node_recon.shape}, edge_recon {edge_recon.shape}, tuple_recon {tuple_recon.shape}, node_pe_recon {node_pe_recon.shape}, edge_pe_recon {edge_pe_recon.shape}')
+        #print(f'node_recon {node_recon.shape}, edge_recon {edge_recon.shape}, tuple_recon {tuple_recon.shape}, node_pe_recon {node_pe_recon.shape}, edge_pe_recon {edge_pe_recon.shape}')
         tuple_label = tuple_label_dict[node_label[batch.edge_index[0]], node_label[batch.edge_index[1]]]
         
         #node label shape mismatch CHANGE -eren

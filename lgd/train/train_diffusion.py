@@ -33,7 +33,10 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation)
         # the embed of labels and prefix are done in fine-tuning of the encoder, not pretraining
         batch.x_masked = batch.x.clone().detach()
         batch.edge_attr_masked = batch.edge_attr.clone().detach()
-        loss, loss_task, pred, loss_node, loss_edge, loss_graph, loss_encoder = model.training_step(batch)
+        if cfg.diffusion.cond_stage_key == 'prompt_graph': #-eren
+            loss, loss_task, pred, loss_node, loss_edge, loss_graph, loss_encoder = model.training_step(batch, prompt_graph_batch = batch.clone().detach())
+        else:
+            loss, loss_task, pred, loss_node, loss_edge, loss_graph, loss_encoder = model.training_step(batch)
         loss = loss + loss_task * cfg.diffusion.get("task_factor", 0.0)
         # with torch.autograd.detect_anomaly():
         loss.backward()
@@ -92,7 +95,7 @@ def eval_epoch(logger, loader, model, split='val', repeat=1, ensemble_mode='none
                     bc.edge_attr_masked = batch.edge_attr.clone().detach()
                     # loss_generation, loss_graph, graph_pred = model.validation_step(bc)
                     loss_graph, graph_pred = model.inference(bc, ddim_steps=ddim_steps, ddim_eta=ddim_eta, use_ddpm_steps=use_ddpm_steps)
-                    batch_pred.append(graph_pred)
+                    batch_pred.append(graph_pred) #- eren graph pred is a list of tples?: for i    x, edge_attr, y_pred = graph_pred[i]  
                     del bc
                 batch_pred = torch.cat(batch_pred).reshape(repeat, -1)
                 if ensemble_mode == 'mean':

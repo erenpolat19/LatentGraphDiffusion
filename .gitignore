@@ -5,3 +5,4 @@ results/
 environment.yml
 *.log
 *.job
+./outputs
