@@ -1416,10 +1416,12 @@ class LatentDiffusion(DDPM):
 
         # log = dict()
         N = batch.num_graphs
+        if cfg.
         batch = self.get_input(batch,  # self.first_stage_key,
                                return_first_stage_outputs=True,
                                force_c_encode=True,
-                               return_original_cond=True)
+                               return_original_cond=True,
+                               prompt_graph_batch=batch.clone().detach()) #-eren
         z, c, x, xrec, xc = (batch.x_start, batch.graph_start), batch.get('c', None), (batch.x_0, batch.edge_attr_0), (batch.x_rec, batch.edge_attr_rec, batch.graph_attr_rec), batch.get('xc', None)
         # TODO: change the output format of above get_input function
 

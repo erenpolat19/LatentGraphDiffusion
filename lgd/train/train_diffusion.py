@@ -33,9 +33,17 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation)
         # the embed of labels and prefix are done in fine-tuning of the encoder, not pretraining
         batch.x_masked = batch.x.clone().detach()
         batch.edge_attr_masked = batch.edge_attr.clone().detach()
+
+        print("------------- INITIAL BATCH INPUT SHAPES -------------")
+        print("x shape: ", batch.x.shape)
+        print("edge_attr shape: ", batch.edge_attr.shape)
+        print("edge_index shape: ", batch.edge_index.shape)
+        print("y shape (graph labels): ", batch.y.shape)
+        print()
+
         if cfg.diffusion.cond_stage_key == 'prompt_graph': #-eren
-            print('batch', batch, 'prompt_graph_batch', prompt_graph_batch)
-            loss, loss_task, pred, loss_node, loss_edge, loss_graph, loss_encoder = model.training_step(batch, prompt_graph_batch = batch.clone().detach())
+            print('batch', batch, 'prompt_graph_batch', batch.clone().detach())
+            loss, loss_task, pred, loss_node, loss_edge, loss_graph, loss_encoder = model.training_step(batch, prompt_graph_batch = batch.clone().detach() )#prompt_graph_batch i added -eren
         else:
             loss, loss_task, pred, loss_node, loss_edge, loss_graph, loss_encoder = model.training_step(batch)
         loss = loss + loss_task * cfg.diffusion.get("task_factor", 0.0)
