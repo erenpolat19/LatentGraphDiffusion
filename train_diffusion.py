@@ -34,6 +34,12 @@ from lgd.encoder.atom_bond_encoder import *
 from lgd.model.GraphTransformerEncoder import GraphTransformerEncoder # HERE 
 from lgd.train.train_diffusion import *
 
+
+def print_gpu_usage(message=""):
+    allocated = torch.cuda.memory_allocated() / 1e9  # Convert to GB
+    reserved = torch.cuda.memory_reserved() / 1e9  # Convert to GB
+    print(f"{message} -> Allocated: {allocated:.2f} GB, Reserved: {reserved:.2f} GB")
+
 def new_optimizer_config(cfg):
     return OptimizerConfig(optimizer=cfg.optim.optimizer,
                            base_lr=cfg.optim.base_lr,
@@ -142,6 +148,9 @@ if __name__ == '__main__':
         # dataset = load_dataset_master(cfg.dataset.format, cfg.dataset.name, cfg.dataset.dataset_dir)
         # if cfg.pretrained.dir:
         #     cfg = load_pretrained_model_cfg(cfg)
+
+        print_gpu_usage('First Train diffusion line 152')
+
         loaders = create_loader()
         loggers = create_logger()
         logging.info(f"[*] Run ID {run_id}: seed={cfg.seed}, "
@@ -170,6 +179,7 @@ if __name__ == '__main__':
         logging.info(cfg)
         cfg.params = params_count(model)
         logging.info('Num parameters: %s', cfg.params)
+        
         # Start training
         if cfg.train.mode == 'standard':
             if cfg.wandb.use:

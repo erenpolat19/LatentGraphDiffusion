@@ -34,12 +34,12 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation)
         batch.x_masked = batch.x.clone().detach()
         batch.edge_attr_masked = batch.edge_attr.clone().detach()
 
-        print("------------- INITIAL BATCH INPUT SHAPES -------------")
-        print("x shape: ", batch.x.shape)
-        print("edge_attr shape: ", batch.edge_attr.shape)
-        print("edge_index shape: ", batch.edge_index.shape)
-        print("y shape (graph labels): ", batch.y.shape)
-        print()
+        # print("------------- INITIAL BATCH INPUT SHAPES -------------")
+        # print("x shape: ", batch.x.shape)
+        # print("edge_attr shape: ", batch.edge_attr.shape)
+        # print("edge_index shape: ", batch.edge_index.shape)
+        # print("y shape (graph labels): ", batch.y.shape)
+        # print()
 
         if cfg.diffusion.cond_stage_key == 'prompt_graph': #-eren
             print('batch', batch, 'prompt_graph_batch', batch.clone().detach())
@@ -171,7 +171,10 @@ def custom_train_diffusion(loggers, loaders, model, optimizer, scheduler):
     split_names = ['val', 'test']
     full_epoch_times = []
     perf = [[] for _ in range(num_splits)]
+
+    print_gpu_usage('Real Train diffusion line 172, before start training')
     for cur_epoch in range(start_epoch, cfg.optim.max_epoch):
+        print_gpu_usage(f'Epoch {cur_epoch} Train diffusion start')
         start_time = time.perf_counter()
         train_epoch(loggers[0], loaders[0], model, optimizer, scheduler,
                     cfg.optim.batch_accumulation)

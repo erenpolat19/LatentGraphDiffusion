@@ -734,11 +734,11 @@ class DenoisingTransformer(nn.Module):
             prompt_e = self.cond_in_mlp_2(prompt_e0)
             prompt_g = self.cond_in_mlp_3(prompt_g0)
             prompt = (prompt_h, prompt_e, prompt_g)
-            batch.prompt_h0, batch.prompt_e0, batch.prompt_g0 = prompt_h0, prompt_e0, prompt_g0
+            batch.prompt_h0, batch.prompt_e0, batch.prompt_g0 = prompt_h0, prompt_e0, prompt_g0 #these are not in prompt graph only 'prompt' is -eren
         elif prompt is None or 'unconditional' in self.condition_list:
             prompt = None
         else:
-            prompt = self.cond_in_mlp(prompt)
+            prompt = self.cond_in_mlp(prompt) #because of this line -eren
         if self.layer_norm:
             h = self.layer_norm_in_h(h)
             e = self.layer_norm_in_e(e)
@@ -798,7 +798,7 @@ class DenoisingTransformer(nn.Module):
                 # batch.x[virtual_node_idx] = v_g
         else:
             v_g = batch.x[virtual_node_idx]
-        if 'masked_graph' in self.condition_list:
+        if 'masked_graph' in self.condition_list: #WE MIGHT NEED TO CHANGE IT -EREN
             prompt_g0 = batch.get('prompt_g0', None)
             if prompt_g0 is not None:
                 v_g = v_g + self.cond_res_mlp(prompt_g0)

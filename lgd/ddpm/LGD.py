@@ -30,6 +30,11 @@ from lgd.model.GraphTransformerEncoder import *
 from lgd.model.SyntheticGraphTransformerEncoder import *
 from lgd.model.DenoisingTransformer import DenoisingTransformer
 
+def print_gpu_usage(message=""):
+    allocated = torch.cuda.memory_allocated() / 1e9  # Convert to GB
+    reserved = torch.cuda.memory_reserved() / 1e9  # Convert to GB
+    print(f"{message} -> Allocated: {allocated:.2f} GB, Reserved: {reserved:.2f} GB")
+
 
 def disabled_train(self, mode=True):
     """Overwrite model.train with this function to make sure train/eval mode
@@ -113,6 +118,8 @@ class DDPM(pl.LightningModule):
         self.logvar = torch.full(fill_value=logvar_init, size=(self.num_timesteps,))
         # if self.learn_logvar:
         self.logvar = nn.Parameter(self.logvar, requires_grad=self.learn_logvar)
+        
+        self.print = True
 
 
     def register_schedule(self, given_betas=None, beta_schedule="linear", timesteps=1000,
@@ -1055,6 +1062,8 @@ class LatentDiffusion(DDPM):
 
     # TODO: reconsider how to construct the loss; also note for different levels/task types
     def p_losses(self, batch, cond, t, batch_idx, noise=None):
+        print_gpu_usage(f'P losses')
+
         x_start = batch.x_start.clone().detach()
         graph_attr_label = batch.graph_start.clone().detach()
         noise = default(noise, lambda: torch.randn_like(x_start))
@@ -1068,19 +1077,23 @@ class LatentDiffusion(DDPM):
         batch_noisy.edge_attr = x_noisy[batch.num_nodes:, :]
         #print('cond', cond)
         #print('cond', cond.shape)
-        batch_output = self.model(batch_noisy, t, cond) #
+        batch_output = self.model(batch_noisy, t, cond) #denoise the noise in latent space, batch_output has x, edge_attr, graph_attr
+
+
         model_output = torch.cat([batch_output.x, batch_output.edge_attr], dim=0)
         node_decode, edge_decode, graph_decode = self.decode_first_stage(batch_output)
         if cfg.dataset.format == 'PyG-QM9':
             graph_decode = graph_decode * batch.get('y_std', 1.) + batch.get('y_mean', 0.)
         # logging.info(model_output.shape)
 
-        print("------------- P LOSSES SHAPES -------------")
-        print("node_decode shape: ", node_decode.shape)
-        print("edge_decode shape: ", edge_decode.shape)
-        print("graph_decode shape: ", graph_decode.shape)
-        print("batch_output.graph_attr shape: ", batch_output.graph_attr.shape)
-        print()
+        if self.print:
+            self.print = False
+            print("------------- P LOSSES SHAPES -------------")
+            print("node_decode shape: ", node_decode.shape)
+            print("edge_decode shape: ", edge_decode.shape)
+            print("graph_decode shape: ", graph_decode.shape)
+            print("batch_output.graph_attr shape: ", batch_output.graph_attr.shape)
+            print()
 
         loss_task, graph_decode = compute_loss(graph_decode, batch.y.clone().detach())
 
@@ -1134,6 +1147,7 @@ class LatentDiffusion(DDPM):
         # TODO: complete loss_graph_encoder for class GraphTransformerDecoder
         # print(loss_graph_encoder)
 
+        #model_output is 
         loss_simple = self.get_loss(model_output, target, mean=False).mean([1])
         loss_graph = self.get_loss(batch_output.graph_attr, graph_attr_label, mean=False).mean([1])
         loss_dict.update({f'{prefix}/loss_simple': loss_simple.mean()})
@@ -1524,6 +1538,7 @@ class DiffusionWrapper(pl.LightningModule):
 
     # TODO: haven't implement other conditioning_key forward, including in get_batch()
     def forward(self, x, t, c_crossattn=None, c_concat=None):  # originally c_crossattn and c_concat are list
+    
         if self.conditioning_key is None:
             out = self.diffusion_model(x, t)
         elif self.conditioning_key == 'concat':
