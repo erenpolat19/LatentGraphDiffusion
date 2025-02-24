@@ -34,6 +34,7 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation)
         batch.x_masked = batch.x.clone().detach()
         batch.edge_attr_masked = batch.edge_attr.clone().detach()
         if cfg.diffusion.cond_stage_key == 'prompt_graph': #-eren
+            print('batch', batch, 'prompt_graph_batch', prompt_graph_batch)
             loss, loss_task, pred, loss_node, loss_edge, loss_graph, loss_encoder = model.training_step(batch, prompt_graph_batch = batch.clone().detach())
         else:
             loss, loss_task, pred, loss_node, loss_edge, loss_graph, loss_encoder = model.training_step(batch)

@@ -33,6 +33,7 @@ train:
   ckpt_clean: True
   ensemble_repeat: 1
   ensemble_mode: none
+  start_eval_epoch: -1
   pretrain:
     mask_node_prob: 0.0
     mask_edge_prob: 0.0
