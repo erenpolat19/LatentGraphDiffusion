@@ -1068,12 +1068,19 @@ class LatentDiffusion(DDPM):
         batch_noisy.edge_attr = x_noisy[batch.num_nodes:, :]
         #print('cond', cond)
         #print('cond', cond.shape)
-        batch_output = self.model(batch_noisy, t, cond)
+        batch_output = self.model(batch_noisy, t, cond) #
         model_output = torch.cat([batch_output.x, batch_output.edge_attr], dim=0)
         node_decode, edge_decode, graph_decode = self.decode_first_stage(batch_output)
         if cfg.dataset.format == 'PyG-QM9':
             graph_decode = graph_decode * batch.get('y_std', 1.) + batch.get('y_mean', 0.)
         # logging.info(model_output.shape)
+
+        print("------------- P LOSSES SHAPES -------------")
+        print("node_decode shape: ", node_decode.shape)
+        print("edge_decode shape: ", edge_decode.shape)
+        print("graph_decode shape: ", graph_decode.shape)
+        print("batch_output.graph_attr shape: ", batch_output.graph_attr.shape)
+        print()
 
         loss_task, graph_decode = compute_loss(graph_decode, batch.y.clone().detach())
 
@@ -1416,7 +1423,6 @@ class LatentDiffusion(DDPM):
 
         # log = dict()
         N = batch.num_graphs
-        if cfg.
         batch = self.get_input(batch,  # self.first_stage_key,
                                return_first_stage_outputs=True,
                                force_c_encode=True,
@@ -1438,6 +1444,8 @@ class LatentDiffusion(DDPM):
         node_decode, edge_decode, graph_decode = self.decode_first_stage(samples)
         if cfg.dataset.format == 'PyG-QM9':
             graph_decode = graph_decode * batch.get('y_std', 1.) + batch.get('y_mean', 0.)
+
+        
         loss_graph, graph_decode = compute_loss(graph_decode, batch.y.clone().detach())
         # logging.info(graph_decode)
 
