@@ -811,9 +811,9 @@ class LatentDiffusion(DDPM):
                 assert prompt_graph_batch is not None
                 prompt_graph_batch.task_id = batch.get('task_id', None)
                 xc = (prompt_graph_batch.x, prompt_graph_batch.edge_attr)
-                print('prompt_graph', prompt_graph_batch)
+                #print('prompt_graph', prompt_graph_batch)
                 c = self.get_learned_conditioning(prompt_graph_batch).graph_attr  # TODO: here use graph_attr as prompt
-                print('buraya girdi c= self.get_learned_conditioning(prompt_graph_batch).graph_attr ')
+                #print('buraya girdi c= self.get_learned_conditioning(prompt_graph_batch).graph_attr ')
                 if not self.first_stage_trainable or not self.cond_stage_trainable:
                     c = c.detach()
             elif cond_key == 'class_label':
@@ -913,7 +913,7 @@ class LatentDiffusion(DDPM):
             t = torch.randint(0, self.num_timesteps, (batch.num_graphs,), device=self.device).long()
         c = batch.get("c", None)
         if cfg.diffusion.cond_stage_key == 'prompt_graph':
-            print( 'condition c', c)
+            #print( 'condition c', c)
             assert c is not None
 
         # TODO: reconsider the loss
@@ -1066,7 +1066,7 @@ class LatentDiffusion(DDPM):
         batch_noisy = copy.deepcopy(batch)
         batch_noisy.x = x_noisy[:batch.num_nodes, :]
         batch_noisy.edge_attr = x_noisy[batch.num_nodes:, :]
-        print('cond', cond)
+        #print('cond', cond)
         #print('cond', cond.shape)
         batch_output = self.model(batch_noisy, t, cond)
         model_output = torch.cat([batch_output.x, batch_output.edge_attr], dim=0)

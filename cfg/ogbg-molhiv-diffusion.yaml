@@ -26,7 +26,7 @@ dataset:
   split_index: 0
 train:
   mode: train_diffusion
-  batch_size: 256
+  batch_size: 64
   eval_period: 10
   enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
   ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.

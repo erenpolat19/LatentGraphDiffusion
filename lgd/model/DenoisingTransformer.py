@@ -725,8 +725,8 @@ class DenoisingTransformer(nn.Module):
 
         h = self.node_in_mlp(batch.x)
         e = self.edge_in_mlp(batch.edge_attr)
-        print('prompt', prompt)
-        print('len prompt', len(prompt))
+        #print('prompt', prompt)
+        #print('len prompt', len(prompt))
 
         if 'masked_graph' in self.condition_list:  # TODO: prompt_graph, how to process? the hidden_dim are different too
             prompt_h0, prompt_e0, prompt_g0 = prompt
