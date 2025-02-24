@@ -16,6 +16,10 @@ from copy import deepcopy
 import warnings
 from utils import random_mask
 
+def print_gpu_usage(message=""):
+    allocated = torch.cuda.memory_allocated() / 1e9  # Convert to GB
+    reserved = torch.cuda.memory_reserved() / 1e9  # Convert to GB
+    print(f"{message} -> Allocated: {allocated:.2f} GB, Reserved: {reserved:.2f} GB")
 
 def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation):
     model.train()
