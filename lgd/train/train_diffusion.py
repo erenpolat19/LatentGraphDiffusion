@@ -171,9 +171,9 @@ def custom_train_diffusion(loggers, loaders, model, optimizer, scheduler):
     full_epoch_times = []
     perf = [[] for _ in range(num_splits)]
 
-    print_gpu_usage('Real Train diffusion line 172, before start training')
+    #print_gpu_usage('Real Train diffusion line 172, before start training')
     for cur_epoch in range(start_epoch, cfg.optim.max_epoch):
-        print_gpu_usage(f'Epoch {cur_epoch} Train diffusion start')
+        #print_gpu_usage(f'Epoch {cur_epoch} Train diffusion start')
         start_time = time.perf_counter()
         train_epoch(loggers[0], loaders[0], model, optimizer, scheduler,
                     cfg.optim.batch_accumulation)
