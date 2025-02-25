@@ -1059,7 +1059,7 @@ class LatentDiffusion(DDPM):
 
     # TODO: reconsider how to construct the loss; also note for different levels/task types
     def p_losses(self, batch, cond, t, batch_idx, noise=None):
-        print_gpu_usage(f'P losses 1')
+        #print_gpu_usage(f'P losses 1')
 
         x_start = batch.x_start.clone().detach()
         graph_attr_label = batch.graph_start.clone().detach()

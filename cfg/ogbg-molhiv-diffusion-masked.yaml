@@ -1,6 +1,6 @@
 out_dir: results
 metric_best: auc
-name_tag: masked-molhiv
+name_tag: ogbg-molhiv-orig
 run_multiple_splits: [] #FROM CALLIE -eren
 accelerator: "cuda:0"
 wandb:
@@ -26,13 +26,14 @@ dataset:
   split_index: 0
 train:
   mode: train_diffusion
-  batch_size: 32
+  batch_size: 64
   eval_period: 10
   enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
   ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
   ckpt_clean: True
   ensemble_repeat: 1
   ensemble_mode: none
+  start_eval_epoch: -1
   pretrain:
     mask_node_prob: 0.0
     mask_edge_prob: 0.0
