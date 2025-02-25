@@ -1072,7 +1072,7 @@ class LatentDiffusion(DDPM):
         batch_noisy = copy.deepcopy(batch)
         batch_noisy.x = x_noisy[:batch.num_nodes, :]
         batch_noisy.edge_attr = x_noisy[batch.num_nodes:, :]
-        print_gpu_usage(f'P losses 2')
+        #print_gpu_usage(f'P losses 2')
         #print('cond', cond)
         #print('cond', cond.shape)
         batch_output = self.model(batch_noisy, t, cond) #denoise the noise in latent space, batch_output has x, edge_attr, graph_attr
