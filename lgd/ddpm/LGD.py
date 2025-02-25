@@ -1352,7 +1352,6 @@ class LatentDiffusion(DDPM):
         if start_T is not None:
             timesteps = min(timesteps, start_T)
             
-        logging.info(f'num timesteps (latent graph diffusion p_sample_loop tayim) {timesteps}')
         iterator = tqdm(reversed(range(0, timesteps)), desc='Sampling t', total=timesteps) if verbose else reversed(
             range(0, timesteps))
 
