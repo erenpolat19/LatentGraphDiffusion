@@ -26,7 +26,7 @@ dataset:
   split_index: 0
 train:
   mode: train_diffusion
-  batch_size: 256
+  batch_size: 128
   eval_period: 10
   enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
   ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
@@ -180,7 +180,7 @@ diffusion:
   conditioning_key: crossattn
   hid_dim: 4  # should be the same as dt.in_dim
   cond_stage_key: prompt_graph
-  first_stage_config: results/ogbg-molhiv-encoder-ogbg-molhiv-orig-2025-02-20_15-22-16/0/ckpt/0.ckpt
+  first_stage_config: results/ogbg-molhiv-encoder-ogbg-molhiv-orig-2025-02-21_11-19-17/0/ckpt/693.ckpt
   cond_stage_config: __is_first_stage__
   node_factor: 1.0
   edge_factor: 1.0 #

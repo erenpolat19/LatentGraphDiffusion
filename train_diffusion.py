@@ -33,12 +33,7 @@ from lgd.train.pretrain_encoder import *
 from lgd.encoder.atom_bond_encoder import *
 from lgd.model.GraphTransformerEncoder import GraphTransformerEncoder # HERE 
 from lgd.train.train_diffusion import *
-
-
-def print_gpu_usage(message=""):
-    allocated = torch.cuda.memory_allocated() / 1e9  # Convert to GB
-    reserved = torch.cuda.memory_reserved() / 1e9  # Convert to GB
-    print(f"{message} -> Allocated: {allocated:.2f} GB, Reserved: {reserved:.2f} GB")
+from utils import print_gpu_usage
 
 def new_optimizer_config(cfg):
     return OptimizerConfig(optimizer=cfg.optim.optimizer,

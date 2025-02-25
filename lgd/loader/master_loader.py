@@ -206,8 +206,10 @@ def load_dataset_master(format, name, dataset_dir):
 
     elif format == 'OGB':
         print("here", name)
-        processed_path = dataset_dir + '/' + name + '/processed.pt'
+        processed_path = dataset_dir + '/' + name.replace('-', '_') + '/processed.pt'
+        print('if ten once', processed_path)
         if os.path.exists(processed_path):
+            print('if ici')
             dataset = torch.load(processed_path, map_location="cpu")
             return dataset
         if name.startswith('ogbg'):
@@ -401,7 +403,7 @@ def load_dataset_master(format, name, dataset_dir):
         # print(f"Indegrees: {cfg.gt.pna_degrees}")
         # print(f"Avg:{np.mean(cfg.gt.pna_degrees)}")
 
-    # torch.save(dataset, dataset_dir + '/' + name + '/processed.pt')  # TODO: this seems troublesome
+    torch.save(dataset, dataset_dir + '/' + name.replace('-', '_') + '/processed.pt')  # TODO: this seems troublesome
 
     return dataset
 

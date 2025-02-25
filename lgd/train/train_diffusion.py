@@ -14,12 +14,7 @@ from lgd.loss.subtoken_prediction_loss import subtoken_cross_entropy
 from lgd.asset.utils import cfg_to_dict, flatten_dict, make_wandb_name, mlflow_log_cfgdict
 from copy import deepcopy
 import warnings
-from utils import random_mask
-
-def print_gpu_usage(message=""):
-    allocated = torch.cuda.memory_allocated() / 1e9  # Convert to GB
-    reserved = torch.cuda.memory_reserved() / 1e9  # Convert to GB
-    print(f"{message} -> Allocated: {allocated:.2f} GB, Reserved: {reserved:.2f} GB")
+from utils import random_mask, print_gpu_usage
 
 def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation):
     model.train()
@@ -46,7 +41,7 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation)
         # print()
 
         if cfg.diffusion.cond_stage_key == 'prompt_graph': #-eren
-            print('batch', batch, 'prompt_graph_batch', batch.clone().detach())
+            #print('batch', batch, 'prompt_graph_batch', batch.clone().detach())
             loss, loss_task, pred, loss_node, loss_edge, loss_graph, loss_encoder = model.training_step(batch, prompt_graph_batch = batch.clone().detach() )#prompt_graph_batch i added -eren
         else:
             loss, loss_task, pred, loss_node, loss_edge, loss_graph, loss_encoder = model.training_step(batch)

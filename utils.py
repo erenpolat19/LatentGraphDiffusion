@@ -9,7 +9,12 @@ import imp
 from torch_geometric.data import InMemoryDataset
 from torch_geometric.graphgym.config import cfg
 
+def print_gpu_usage(message=""):
+    allocated = torch.cuda.memory_allocated() / 1e9  # Convert to GB
+    reserved = torch.cuda.memory_reserved() / 1e9  # Convert to GB
+    logging.info(f"{message} -> Allocated: {allocated:.2f} GB, Reserved: {reserved:.2f} GB")
 
+    
 class DataListSet(InMemoryDataset):
     def __init__(self, datalist):
         super().__init__()

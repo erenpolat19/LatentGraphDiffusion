@@ -17,10 +17,10 @@ import warnings
 from lgd.model.GraphTransformerEncoder import GTE_Attention, GraphTransformerEncoderLayer
 from lgd.model.utils import pyg_softmax, num2batch, get_timestep_embedding, get_log_deg
 from torch_geometric.graphgym.config import cfg
+from utils import print_gpu_usage
 import logging
 # from watchpoints import watch
 # watch.config(pdb=True)
-
 
 # TODO: preprocess the prompt examples to:
 #  (1) node level, (num_node) x n_prompt x num_heads x out_dim;
@@ -93,6 +93,7 @@ class Cross_Attention(nn.Module):
             nn.init.xavier_normal_(self.VeRow)
 
     def propagate_attention(self, batch, type='node_wise'):
+        torch.cuda.empty_cache()
         if type == 'node_wise':  # node-wise
             # TODO: finish edge enhance
             src = batch.K[batch.edge_index[0]]  # (num_nodes) x num_heads x out_dim
@@ -134,16 +135,21 @@ class Cross_Attention(nn.Module):
                 batch.wV = batch.wV + rowV
 
         else:
+            print_gpu_usage('Propogate attention 1')
             # TODO: here suppose the prompts are all graph-level, i.e. applies to all nodes. condition types include:
             #  prompt_graph, prefix, label, multi-modal
             n_prompt = batch.K.shape[0] if type == 'share' else batch.K.shape[1]
             num_edges = batch.E.shape[0]
             num_nodes = batch.num_nodes
+            print_gpu_usage('Propogate attention 2')
             if type == 'share':
                 src_h = batch.K.unsqueeze(0).repeat(num_nodes, 1, 1, 1)  # num_nodes in batch x n_prompt x num_heads x out_dim
+                print_gpu_usage('Propogate attention 3')
                 src_e = batch.K.unsqueeze(0).repeat(num_edges, 1, 1, 1)  # num_edges in batch x n_prompt x num_heads x out_dim
                 v_h = batch.V.unsqueeze(0).repeat(num_nodes, 1, 1, 1).reshape(-1, self.num_heads, self.out_dim)
+                print_gpu_usage('Propogate attention 3.5')
                 v_e = batch.V.unsqueeze(0).repeat(num_edges, 1, 1, 1).reshape(-1, self.num_heads, self.out_dim)
+                print_gpu_usage('Propogate attention 4')
             else:
                 # TODO: preprocess the num_node_per_graph (including virtual nodes)
                 batch_node = batch.batch_node_idx  # num2batch(batch.num_node_per_graph)
@@ -157,8 +163,15 @@ class Cross_Attention(nn.Module):
 
             dest_h = batch.Q_h.unsqueeze(1).repeat(1, n_prompt, 1, 1)     # num_nodes in batch x n_prompt x num_heads x out_dim
             score_h = torch.mul(src_h, dest_h)      # element-wise multiplication;
+
+            #CLEANUP -EREN
+
+            del src_h, dest_h
+            torch.cuda.empty_cache()
+
             # TODO: some other solutions including add, matrix multiplication or global attention; also consider symmetry
             if self.score_act:
+
                 score_h = self.act(score_h)
             score_h = score_h.sum(-1).reshape(-1, self.num_heads, 1)   # (num node in batch x n_prompt) x num_heads x 1
             if self.scaled_attn:
@@ -173,6 +186,11 @@ class Cross_Attention(nn.Module):
 
             msg = v_h * score_h  # (num node in batch x n_prompt) x num_heads x out_dim
             batch.wV = scatter_add(msg, idx, dim=0, dim_size=num_nodes)  # (num nodes in batch) x num_heads x out_dim
+
+            #CLEANUP -EREN
+
+            del v_h, score_h
+            torch.cuda.empty_cache()
 
             # if batch.get("E", None) is not None:
             batch.E = batch.E.view(-1, self.num_heads, self.out_dim)
@@ -190,6 +208,10 @@ class Cross_Attention(nn.Module):
             score_e = self.dropout(score_e)
             msg = v_e * score_e  # (num edges in batch x n_prompt) x num_heads x out_dim
             batch.wE = scatter_add(msg, idx_e, dim=0, dim_size=num_edges).flatten(1)  # (num edges in batch) x (num_heads x out_dim)
+            
+            del msg
+            torch.cuda.empty_cache()
+
 
     def forward(self, batch, prompt=None):
         if prompt is None:
@@ -717,6 +739,7 @@ class DenoisingTransformer(nn.Module):
         # batch.edge_attr_0 = batch.edge_attr
         # num_nodes, num_edges = batch.num_nodes, batch.edge_index.shape[1]
 
+        #print_gpu_usage(f'Den')
         batch_num_node = batch.num_node_per_graph
         batch_node_idx = num2batch(batch_num_node)
         assert torch.equal(batch_node_idx, batch.batch)

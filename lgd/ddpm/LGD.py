@@ -29,11 +29,7 @@ from lgd.model.Dictionary import *
 from lgd.model.GraphTransformerEncoder import *
 from lgd.model.SyntheticGraphTransformerEncoder import *
 from lgd.model.DenoisingTransformer import DenoisingTransformer
-
-def print_gpu_usage(message=""):
-    allocated = torch.cuda.memory_allocated() / 1e9  # Convert to GB
-    reserved = torch.cuda.memory_reserved() / 1e9  # Convert to GB
-    print(f"{message} -> Allocated: {allocated:.2f} GB, Reserved: {reserved:.2f} GB")
+from utils import print_gpu_usage
 
 
 def disabled_train(self, mode=True):
@@ -263,6 +259,7 @@ class DDPM(pl.LightningModule):
         b = int(torch.max(batch_idx)) + 1
         img = torch.randn(shape, device=device)
         intermediates = [img]
+        logging.info(f'num timesteps (ddpm p_sample_loop tayim) {self.num_timesteps}')
         for i in tqdm(reversed(range(0, self.num_timesteps)), desc='Sampling t', total=self.num_timesteps):
             img = self.p_sample(img, torch.full((b,), i, device=device, dtype=torch.long), batch_idx=batch_idx,
                                 clip_denoised=self.clip_denoised)
@@ -1062,7 +1059,7 @@ class LatentDiffusion(DDPM):
 
     # TODO: reconsider how to construct the loss; also note for different levels/task types
     def p_losses(self, batch, cond, t, batch_idx, noise=None):
-        print_gpu_usage(f'P losses')
+        print_gpu_usage(f'P losses 1')
 
         x_start = batch.x_start.clone().detach()
         graph_attr_label = batch.graph_start.clone().detach()
@@ -1075,6 +1072,7 @@ class LatentDiffusion(DDPM):
         batch_noisy = copy.deepcopy(batch)
         batch_noisy.x = x_noisy[:batch.num_nodes, :]
         batch_noisy.edge_attr = x_noisy[batch.num_nodes:, :]
+        print_gpu_usage(f'P losses 2')
         #print('cond', cond)
         #print('cond', cond.shape)
         batch_output = self.model(batch_noisy, t, cond) #denoise the noise in latent space, batch_output has x, edge_attr, graph_attr
@@ -1353,6 +1351,8 @@ class LatentDiffusion(DDPM):
 
         if start_T is not None:
             timesteps = min(timesteps, start_T)
+            
+        logging.info(f'num timesteps (latent graph diffusion p_sample_loop tayim) {timesteps}')
         iterator = tqdm(reversed(range(0, timesteps)), desc='Sampling t', total=timesteps) if verbose else reversed(
             range(0, timesteps))
 
