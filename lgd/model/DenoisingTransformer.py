@@ -822,4 +822,3 @@ class DenoisingTransformer(nn.Module):
 # emb = get_timestep_embedding(torch.tensor([1, 2]), 4)
 # print(emb)
 
-

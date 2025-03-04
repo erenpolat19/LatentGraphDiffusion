@@ -138,13 +138,23 @@ if __name__ == '__main__':
         cfg.seed = seed
         cfg.run_id = run_id
         seed_everything(cfg.seed)
-        auto_select_device()
+        #auto_select_device()
+
+        cfg.accelerator = 'cuda'
+        cfg.devices = 0
+
+        # Print the currently selected device in PyTorch
+        if torch.cuda.is_available():
+            print("Current CUDA Device:", torch.cuda.current_device())
+            print("Device Name:", torch.cuda.get_device_name(torch.cuda.current_device()))
+        else:
+            print("CUDA is not available.")
         # TODO: debug loader and dataset
         # dataset = load_dataset_master(cfg.dataset.format, cfg.dataset.name, cfg.dataset.dataset_dir)
         # if cfg.pretrained.dir:
         #     cfg = load_pretrained_model_cfg(cfg)
 
-        print_gpu_usage('First Train diffusion line 152')
+        #print_gpu_usage('First Train diffusion line 152')
 
         loaders = create_loader()
         loggers = create_logger()
@@ -162,6 +172,7 @@ if __name__ == '__main__':
              train_mode=cfg.diffusion.get("train_mode", 'sample')).to(torch.device(cfg.accelerator))
         # model.to(torch.device(cfg.accelerator))
         if cfg.pretrained.dir:
+            print('PRETRAINED DEN')
             model = init_model_from_pretrained(
                 model, cfg.pretrained.dir, cfg.pretrained.freeze_main,
                 cfg.pretrained.reset_prediction_head

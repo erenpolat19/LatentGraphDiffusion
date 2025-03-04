@@ -107,15 +107,15 @@ def load_dataset_master(format, name, dataset_dir):
     Returns:
         PyG dataset object with applied perturbation transforms and data splits
     """
+    print('format', format)
     if format.startswith('PyG-'):
         pyg_dataset_id = format.split('-', 1)[1]
         dataset_dir = osp.join(dataset_dir, pyg_dataset_id)
         processed_path = dataset_dir + '/' + name + '/processed.pt'
         if os.path.exists(processed_path):
             dataset = torch.load(processed_path, map_location="cpu")
+            print(dataset[0].x)
             return dataset
-        print(dataset_dir)
-
         if pyg_dataset_id == 'GNNBenchmarkDataset':
             dataset = preformat_GNNBenchmarkDataset(dataset_dir, name)
 
@@ -166,6 +166,8 @@ def load_dataset_master(format, name, dataset_dir):
 
         elif pyg_dataset_id == 'TUDataset':
             dataset = preformat_TUDataset(dataset_dir, name)
+            print('olm 2')
+            print(dataset[0])
 
         elif pyg_dataset_id == 'VOCSuperpixels':
             dataset = preformat_VOCSuperpixels(dataset_dir, name,
@@ -403,7 +405,7 @@ def load_dataset_master(format, name, dataset_dir):
         # print(f"Indegrees: {cfg.gt.pna_degrees}")
         # print(f"Avg:{np.mean(cfg.gt.pna_degrees)}")
 
-    torch.save(dataset, dataset_dir + '/' + name.replace('-', '_') + '/processed.pt')  # TODO: this seems troublesome
+    torch.save(dataset, dataset_dir + '/' + name + '/processed.pt')  # TODO: this seems troublesome
 
     return dataset
 

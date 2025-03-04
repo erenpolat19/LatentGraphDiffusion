@@ -1,0 +1,465 @@
+accelerator: cuda:0
+benchmark: false
+bn:
+  eps: 1.0e-05
+  mom: 0.1
+cfg_dest: config.yaml
+custom_metrics: []
+dataset:
+  add_virtual_node_edge: true
+  cache_load: false
+  cache_save: false
+  dir: ./datasets
+  edge_dim: 128
+  edge_encoder: true
+  edge_encoder_bn: false
+  edge_encoder_name: Bond_pad
+  edge_encoder_num_types: 5
+  edge_message_ratio: 0.8
+  edge_negative_sampling_ratio: 1.0
+  edge_train_mode: all
+  encoder: true
+  encoder_bn: true
+  encoder_dim: 128
+  encoder_name: db
+  format: OGB
+  label_column: none
+  label_table: none
+  location: local
+  name: ogbg-molhiv
+  node_encoder: true
+  node_encoder_bn: false
+  node_encoder_name: Atom_pad
+  node_encoder_num_types: 120
+  remove_feature: false
+  resample_disjoint: false
+  resample_negative: false
+  shuffle_split: true
+  split:
+  - 0.8
+  - 0.1
+  - 0.1
+  split_index: 0
+  split_mode: standard
+  subgraph: false
+  task: graph
+  task_type: classification
+  to_undirected: false
+  transductive: false
+  transform: none
+  tu_simple: true
+devices: 1
+diffusion:
+  cond_stage_config: __is_first_stage__
+  cond_stage_key: prompt_graph
+  conditioning_key: crossattn
+  edge_factor: 1.0
+  first_stage_config: results/ogbg-molhiv-encoder-ogbg-molhiv-orig-2025-02-21_11-19-17/0/ckpt/693.ckpt
+  graph_factor: 1.0
+  hid_dim: 4
+  node_factor: 1.0
+  task_factor: 1.0
+dt:
+  O_e: true
+  act: relu
+  attn:
+    O_e: true
+    act: relu
+    attn_product: mul
+    attn_reweight: false
+    bn_momentum: 0.1
+    bn_no_runner: false
+    clamp: 5.0
+    deg_scaler: false
+    edge_enhance: false
+    edge_reweight: false
+    full_attn: true
+    fwl: false
+    norm_e: true
+    score_act: false
+    signed_sqrt: true
+  attn_dropout: 0.25
+  batch_norm: false
+  bn_momentum: 0.1
+  bn_no_runner: false
+  cond_dim: 4
+  condition_list:
+  - prompt_graph
+  dropout: 0.05
+  ff_e: true
+  ff_e_ca: true
+  ff_e_sa: false
+  final_norm: true
+  hid_dim: 64
+  in_dim: 4
+  layer_norm: true
+  norm_e: true
+  num_heads: 4
+  num_layers: 4
+  out_dim: 4
+  pool: mean
+  pool_edge: true
+  pool_vn: false
+  post_pool: true
+  residual: true
+  self_attn: false
+  temb_dim: 64
+  use_time: true
+encoder:
+  O_e: true
+  act: relu
+  add_virtual_node_edge: true
+  attn:
+    O_e: true
+    act: relu
+    attn_product: mul
+    attn_reweight: false
+    bn_momentum: 0.1
+    bn_no_runner: false
+    clamp: 5.0
+    deg_scaler: false
+    edge_enhance: true
+    edge_reweight: false
+    full_attn: true
+    fwl: false
+    norm_e: true
+    score_act: false
+    signed_sqrt: true
+  attn_dropout: 0.5
+  batch_norm: true
+  bn_momentum: 0.1
+  bn_no_runner: false
+  dropout: 0.05
+  edge_encoder: true
+  edge_encoder_bn: false
+  edge_encoder_name: Bond_pad
+  edge_encoder_num_types: 5
+  ff_e: false
+  final_norm: true
+  force_undirected: true
+  hid_dim: 64
+  in_dim: 40
+  label_embed_type: add_virtual
+  layer_norm: false
+  model_type: GraphTransformerStructureEncoder
+  mpnn:
+    act: relu
+    dropout: 0.05
+    edge_enhance: true
+    enable: true
+    project_edge: true
+  node_encoder: true
+  node_encoder_bn: false
+  node_encoder_name: Atom_pad
+  node_encoder_num_types: 120
+  norm_e: true
+  num_classes: 2
+  num_heads: 4
+  num_layers: 10
+  num_task: 1
+  out_dim: 4
+  pe_raw_norm: None
+  pool: mean
+  pool_edge: true
+  pool_vn: false
+  posenc_dim: 24
+  posenc_in_dim: 16
+  posenc_in_dim_edge: 16
+  post_pool: true
+  prefix_dim: 64
+  prefix_type: add_virtual
+  residual: true
+  task_type: classification
+  temb_dim: 0
+  update_e: true
+  use_time: false
+gnn:
+  act: relu
+  agg: mean
+  att_final_linear: false
+  att_final_linear_bn: false
+  att_heads: 1
+  batchnorm: true
+  clear_feature: true
+  dim_inner: 64
+  dropout: 0.0
+  head: san_graph
+  keep_edge: 0.5
+  l2norm: true
+  layer_type: generalconv
+  layers_mp: 2
+  layers_post_mp: 3
+  layers_pre_mp: 0
+  msg_direction: single
+  normalize_adj: false
+  self_msg: concat
+  skip_every: 1
+  stage_type: stack
+gpu_mem: false
+gt:
+  attn_dropout: 0.5
+  batch_norm: true
+  dim_hidden: 64
+  dropout: 0.05
+  layer_norm: false
+  layer_type: CustomGatedGCN+Transformer
+  layers: 10
+  n_heads: 4
+mem:
+  inplace: false
+metric_agg: argmax
+metric_best: auc
+model:
+  edge_decoding: dot
+  graph_pooling: mean
+  loss_fun: cross_entropy
+  match_upper: true
+  size_average: mean
+  thresh: 0.5
+  type: LatentDiffusion
+name_tag: ogbg-molhiv-orig
+num_threads: 6
+num_workers: 0
+optim:
+  base_lr: 0.0001
+  batch_accumulation: 1
+  clip_grad_norm: true
+  lr_decay: 0.1
+  max_epoch: 500
+  min_lr: 1.0e-06
+  momentum: 0.9
+  num_warmup_epochs: 20
+  optimizer: adamW
+  reduce_factor: 0.5
+  schedule_patience: 5
+  scheduler: cosine_with_warmup
+  steps:
+  - 30
+  - 60
+  - 90
+  weight_decay: 1.0e-05
+out_dir: results/ogbg-molhiv-diffusion-ogbg-molhiv-orig-2025-02-25_11-07-21
+posenc_ERE:
+  accuracy: 0.1
+  dim_pe: 16
+  enable: null
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  post_layers: 0
+  raw_norm_type: none
+posenc_ERN:
+  accuracy: 0.1
+  dim_pe: 16
+  enable: null
+  er_dim: none
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  post_layers: 0
+  raw_norm_type: none
+posenc_EdgeRWSE:
+  dim_pe: 16
+  enable: false
+  kernel:
+    times: []
+    times_func: ''
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  post_layers: 0
+  raw_norm_type: none
+posenc_ElstaticSE:
+  dim_pe: 16
+  enable: false
+  kernel:
+    times: []
+    times_func: range(10)
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  post_layers: 0
+  raw_norm_type: none
+posenc_EquivStableLapPE:
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: sym
+    max_freqs: 10
+  enable: false
+  raw_norm_type: none
+posenc_HKdiagSE:
+  dim_pe: 16
+  enable: false
+  kernel:
+    times: []
+    times_func: ''
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  post_layers: 0
+  raw_norm_type: none
+posenc_HodgeLap1PE:
+  dim_pe: 16
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: sym
+    max_freqs: 10
+  enable: false
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  post_layers: 0
+  raw_norm_type: none
+posenc_InterRWSE:
+  dim_pe: 16
+  enable: false
+  kernel:
+    times: []
+    times_func: ''
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  post_layers: 0
+  raw_norm_type: none
+posenc_LapPE:
+  dim_pe: 16
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: sym
+    max_freqs: 10
+  enable: false
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  post_layers: 0
+  raw_norm_type: none
+posenc_RD:
+  dim_pe: 16
+  enable: false
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  post_layers: 0
+  raw_norm_type: none
+posenc_RRWP:
+  add_identity: true
+  dim_pe: 16
+  enable: true
+  ksteps: 16
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  post_layers: 0
+  raw_norm_type: none
+  real_emb: true
+  spd: false
+posenc_RWSE:
+  dim_pe: 16
+  enable: false
+  kernel:
+    times: []
+    times_func: ''
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  post_layers: 0
+  raw_norm_type: none
+posenc_SignNet:
+  dim_pe: 16
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: sym
+    max_freqs: 10
+  enable: false
+  layers: 3
+  local: false
+  model: none
+  n_heads: 4
+  pass_as_var: false
+  phi_hidden_dim: 64
+  phi_out_dim: 4
+  post_layers: 0
+  raw_norm_type: none
+prep:
+  dist_enable: null
+  exp: null
+pretrained:
+  dir: null
+print: both
+round: 4
+run_dir: results
+run_multiple_splits: []
+seed: 0
+share:
+  dim_in: 1
+  dim_out: 1
+  num_splits: 1
+tensorboard_agg: true
+tensorboard_each_run: false
+train:
+  auto_resume: false
+  batch_size: 64
+  ckpt_best: true
+  ckpt_clean: true
+  ckpt_period: 100
+  enable_ckpt: true
+  ensemble_mode: none
+  ensemble_repeat: 1
+  epoch_resume: -1
+  eval_period: 10
+  iter_per_epoch: 32
+  mode: train_diffusion
+  neighbor_sizes:
+  - 20
+  - 15
+  - 10
+  - 5
+  node_per_graph: 32
+  pretrain:
+    atom_bond_only: false
+    edge_factor: 1.0
+    graph_factor: 1.0
+    input_target: true
+    mask_edge_prob: 0.0
+    mask_label_prob: 0.5
+    mask_node_prob: 0.0
+    node_factor: 1.0
+    original_task: true
+    recon: all
+  radius: extend
+  sample_node: false
+  sampler: full_batch
+  skip_train_eval: false
+  start_eval_epoch: 500
+  walk_length: 4
+val:
+  node_per_graph: 32
+  radius: extend
+  sample_node: false
+  sampler: full_batch
+view_emb: false
+wandb:
+  project: molhiv
+  use: false

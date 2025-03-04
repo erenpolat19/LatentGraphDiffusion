@@ -1,0 +1,183 @@
+# Original:  zinc-GRIT-2000.yaml
+out_dir: results
+metric_best: auc
+tensorboard_each_run: False  # Log to Tensorboard each run
+accelerator: "cuda:0"
+name_tag: IMDB-MULTI
+run_multiple_splits: [] #FROM CALLIE -eren
+wandb:
+  use: False
+  project: imdbm
+dataset:
+  format: PyG-TUDataset
+  name: IMDB-MULTI
+  task: graph
+  task_type: classification
+  transductive: False
+  node_encoder: True
+  node_encoder_name: Atom_pad #was atom, getting error
+  node_encoder_num_types: 120
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: Bond_pad #was bond, getting error
+  edge_encoder_num_types: 5
+  edge_encoder_bn: False
+  add_virtual_node_edge: False #False yaptik cabuk baslasin diye -eren
+  subgraph: False
+  split_mode: 'random'
+  split_index: 0
+pretrained:
+  dir:
+prep:
+  exp: # HERE
+  dist_enable: # HERE
+posenc_ERN: # HERE
+  enable: 
+posenc_ERE: # HERE
+  enable:
+train:
+  mode: pretrain_encoder
+  batch_size: 256 #was 256, changed for trace -eren
+  eval_period: 1
+  enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
+  ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
+  ckpt_clean: False # Do not delete old ckpt each time.
+  ckpt_period: 10
+  ensemble_repeat: 1
+  ensemble_mode: none
+  pretrain:
+    mask_node_prob: 0.0 
+    mask_edge_prob: 0.0
+    mask_label_prob: 0.5
+    recon: all
+    original_task: True #graph level classification loss is added (loss + loss_graph * cfg.train.pretrain.graph_factor)
+    input_target: True #determines whether label information should be used as additional input during pretraining
+    node_factor: 1.0 #loss for node, edge, graph level pred
+    edge_factor: 1.0
+    graph_factor: 1.0
+    atom_bond_only: False #was false -eren only keeps the first dimension, meaning oonnnly the atom number (node_label = node_label[:, 0].flatten())
+            
+           
+model:
+  type: GraphTransformerStructureEncoder
+  loss_fun: cross_entropy
+  edge_decoding: dot
+  graph_pooling: mean
+posenc_RRWP:
+  enable: True #-eren False yapsak mi, yaptik
+  ksteps: 16
+encoder:
+  model_type: GraphTransformerStructureEncoder
+  in_dim: 40
+  prefix_dim: 64
+  posenc_in_dim: 16
+  posenc_in_dim_edge: 16
+  posenc_dim: 24
+  pe_raw_norm: None
+  hid_dim: 64
+  out_dim: 4
+  use_time: False
+  temb_dim: 0
+  num_heads: 4
+  num_layers: 10
+  dropout: 0.05
+  attn_dropout: 0.5
+  bn_momentum: 0.1 #HERE
+  bn_no_runner: False #HERE
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True -eren False yaptik
+    O_e: True
+    norm_e: True
+    fwl: False
+    signed_sqrt: True
+    score_act: False
+    deg_scaler: False
+    attn_product: mul
+    attn_reweight: False
+    edge_reweight: False
+    bn_momentum: 0.1 # HERE
+    bn_no_runner: False
+  mpnn:
+    enable: True
+    act: 'relu'
+    dropout: 0.05
+    edge_enhance: True -eren False yaptik
+    project_edge: True
+  residual: True
+  layer_norm: False
+  batch_norm: True
+  act: 'relu'
+  norm_e: True
+  O_e: True
+  ff_e: False
+  update_e: True
+  force_undirected: True
+  pool: mean
+  pool_edge: True
+  pool_vn: False
+  post_pool: True
+  final_norm: True
+  # prefix_type: add_virtual
+  label_embed_type: add_all
+  num_task: 1
+  task_type: classification
+  num_classes: 2
+  node_encoder: True
+  node_encoder_name: Atom_pad #was atom, getting an error
+  node_encoder_num_types: 120
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: Bond_pad #was bond, getting an error
+  edge_encoder_num_types: 5
+  edge_encoder_bn: False
+gt:
+  layer_type: GritTransformer
+  layers: 10
+  n_heads: 8
+  dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dropout: 0.0
+  layer_norm: False
+  batch_norm: True
+#  bn_momentum: 0.01
+  update_e: True
+  attn_dropout: 0.2
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True -eren false yaptik
+    O_e: True
+    norm_e: True
+    fwl: False
+gnn: # decoder --> san_graph = MLP + pooling
+  head: san_graph
+  layers_pre_mp: 0
+  layers_post_mp: 3  # Not used when `gnn.head: san_graph`
+  dim_inner: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  batchnorm: True
+  act: relu
+  dropout: 0.0
+  agg: mean
+  normalize_adj: False
+posenc_RWSE:
+  enable: False
+  kernel:
+    times_func: range(1,21)
+  model: Linear
+  dim_pe: 28
+  raw_norm_type: BatchNorm
+optim:
+  clip_grad_norm: True
+  optimizer: adamW
+  weight_decay: 1e-5
+  base_lr: 0.0001
+  max_epoch: 1000
+  num_warmup_epochs: 10
+  scheduler: cosine_with_warmup
+  min_lr: 1e-6
+  reduce_factor: 0.5 # -eren idk what s the right one
+  schedule_patience: 15 # -eren idk what s the right one
+  batch_accumulation: 1 # -eren idk

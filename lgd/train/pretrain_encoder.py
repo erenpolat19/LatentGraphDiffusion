@@ -61,6 +61,7 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
             pred.edge_attr = pred.edge_attr.detach()
             pred.graph_attr = pred.graph_attr.detach()
         node_pred, edge_pred, graph_pred = model.model.decode(pred)
+        print('graph_pred ilk', graph_pred)
         # if iter == 0:
         #     logging.info(cfg.train.pretrain.input_target)
         #     logging.info(masked_label_idx.float().sum())
@@ -148,6 +149,9 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
             optimizer.zero_grad()
         _true = graph_label.detach().to('cpu', non_blocking=True)
         _pred = graph_pred.detach().to('cpu', non_blocking=True)
+        print('_pred',_pred)
+
+
         logger.update_stats(true=_true,
                             pred=_pred,
                             loss=loss.detach().cpu().item(),

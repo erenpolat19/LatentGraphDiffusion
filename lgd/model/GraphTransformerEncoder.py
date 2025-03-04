@@ -1472,9 +1472,18 @@ class GraphTransformerStructureEncoder(nn.Module):
         return self.forward(batch, t, prefix, label, **kwargs)
 
     def decode(self, batch, **kwargs):
+        '''
+            Decodes latent x, latent edge_attr, and latent graph embedding (task, which is just classification)
+        '''
         return self.decode_node(batch.x), self.decode_edge(batch.edge_attr), self.decode_graph(batch.graph_attr).flatten()
 
     def decode_recon(self, batch, **kwargs):
+        '''
+            Extracts node features for edges.
+            Computes edge scores based on node interactions.
+            Aggregates edge scores into node scores using scatter.
+            Decodes final node and edge representations.
+        '''
         src = batch.x[batch.edge_index[0]]  # (num_nodes) x num_heads x out_dim
         dest = batch.x[batch.edge_index[1]]  # (num_nodes) x num_heads x out_dim
         score_edge = torch.mul(src, dest) if self.attn_product == 'mul' else (src + dest)  # element-wise multiplication;

@@ -260,7 +260,8 @@ class DDPM(pl.LightningModule):
         img = torch.randn(shape, device=device)
         intermediates = [img]
         logging.info(f'num timesteps (ddpm p_sample_loop tayim) {self.num_timesteps}')
-        for i in tqdm(reversed(range(0, self.num_timesteps)), desc='Sampling t', total=self.num_timesteps):
+        # for i in tqdm(reversed(range(0, self.num_timesteps)), desc='Sampling t', total=self.num_timesteps):
+        for i in reversed(range(0, self.num_timesteps)):
             img = self.p_sample(img, torch.full((b,), i, device=device, dtype=torch.long), batch_idx=batch_idx,
                                 clip_denoised=self.clip_denoised)
             if i % self.log_every_t == 0 or i == self.num_timesteps - 1:
@@ -783,6 +784,7 @@ class LatentDiffusion(DDPM):
         #  (2) the output format, should concat
 
         if self.model.conditioning_key is not None:
+            assert self.first_stage_trainable == False #-eren
             if cond_key is None:
                 cond_key = self.cond_stage_key
             if cond_key == 'masked_graph':
@@ -1079,21 +1081,22 @@ class LatentDiffusion(DDPM):
 
 
         model_output = torch.cat([batch_output.x, batch_output.edge_attr], dim=0)
-        node_decode, edge_decode, graph_decode = self.decode_first_stage(batch_output)
+        node_decode, edge_decode, graph_decode = self.decode_first_stage(batch_output) #goes to decode(batch.x), decode(batch.edge_attr, decode_graph(batch.graph_attr))
+
+
+        #print('graph_decode', graph_decode)
+        
         if cfg.dataset.format == 'PyG-QM9':
             graph_decode = graph_decode * batch.get('y_std', 1.) + batch.get('y_mean', 0.)
         # logging.info(model_output.shape)
 
-        if self.print:
-            self.print = False
-            print("------------- P LOSSES SHAPES -------------")
-            print("node_decode shape: ", node_decode.shape)
-            print("edge_decode shape: ", edge_decode.shape)
-            print("graph_decode shape: ", graph_decode.shape)
-            print("batch_output.graph_attr shape: ", batch_output.graph_attr.shape)
-            print()
+        if cfg.train.get('cf_mode', False) and self.current_epoch > cfg.train.get('cf_start_epoch', -1):
+            loss_task, graph_decode = compute_loss(graph_decode, 1 - batch.y.clone().detach())
+            loss_task *= cfg.diffusion.cf_factor
+        else:
+            loss_task, graph_decode = compute_loss(graph_decode, batch.y.clone().detach())
 
-        loss_task, graph_decode = compute_loss(graph_decode, batch.y.clone().detach())
+        #print('graph decode 2', graph_decode)
 
         if cfg.train.mode in ['qm9_unconditional', 'qm9_conditional']:
             generated_mol = []
@@ -1429,7 +1432,7 @@ class LatentDiffusion(DDPM):
     @torch.no_grad()
     def inference(self, batch, sample=True, ddim_steps=None, ddim_eta=0., use_ddpm_steps=False, return_keys=None,
                    quantize_denoised=True, inpaint=True, plot_denoise_rows=False, plot_progressive_rows=True,
-                   plot_diffusion_rows=True, visualize=False, **kwargs):
+                   plot_diffusion_rows=True, visualize=False, return_all = False, **kwargs):
 
         # TODO: implement DDIM related codes
         use_ddim = ddim_steps is not None
@@ -1473,6 +1476,16 @@ class LatentDiffusion(DDPM):
                 accumulated_edge += batch.num_node_per_graph[i] ** 2
             graph_decode = generated_mol
 
+        elif return_all:
+            generated_graphs = []
+            accumulated_node, accumulated_edge = 0, 0
+            for i in range(batch.num_graphs):
+                generated_graphs.append((torch.argmax(node_decode[accumulated_node: accumulated_node + batch.num_node_per_graph[i]], dim=1, keepdim=False),
+                                      torch.argmax(edge_decode[accumulated_edge: accumulated_edge + batch.num_node_per_graph[i] ** 2], dim=1, keepdim=False).reshape(batch.num_node_per_graph[i], batch.num_node_per_graph[i]),
+                                      graph_decode[i].unsqueeze(0)))
+                accumulated_node += batch.num_node_per_graph[i]
+                accumulated_edge += batch.num_node_per_graph[i] ** 2
+            
         elif cfg.train.mode in ['generic_generation']:
             generic_graphs = []
             accumulated_node, accumulated_edge = 0, 0
@@ -1490,7 +1503,10 @@ class LatentDiffusion(DDPM):
                 accumulated_edge += batch.num_node_per_graph[i] ** 2
             graph_decode = generic_graphs
 
-        return loss_graph, graph_decode
+        if return_all:
+            return loss_graph, node_decode, edge_decode, graph_decode, generated_graphs
+        else:
+            return loss_graph, graph_decode
 
 
     def configure_optimizers(self):

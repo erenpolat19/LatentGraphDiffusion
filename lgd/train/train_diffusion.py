@@ -15,6 +15,7 @@ from lgd.asset.utils import cfg_to_dict, flatten_dict, make_wandb_name, mlflow_l
 from copy import deepcopy
 import warnings
 from utils import random_mask, print_gpu_usage
+from lgd.counterfactual.cf_eval_utils import *
 
 def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation):
     model.train()
@@ -57,6 +58,7 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation)
             optimizer.zero_grad()
         _true = label.detach().to('cpu', non_blocking=True)
         _pred = pred.detach().to('cpu', non_blocking=True)
+        
         logger.update_stats(true=_true,
                             pred=_pred,
                             loss=loss.detach().cpu().item(),
@@ -175,6 +177,7 @@ def custom_train_diffusion(loggers, loaders, model, optimizer, scheduler):
     for cur_epoch in range(start_epoch, cfg.optim.max_epoch):
         #print_gpu_usage(f'Epoch {cur_epoch} Train diffusion start')
         start_time = time.perf_counter()
+        print_gpu_usage(f'epoch {cur_epoch}')
         train_epoch(loggers[0], loaders[0], model, optimizer, scheduler,
                     cfg.optim.batch_accumulation)
         perf[0].append(loggers[0].write_epoch(cur_epoch))
