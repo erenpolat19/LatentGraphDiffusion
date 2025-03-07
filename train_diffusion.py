@@ -141,7 +141,12 @@ if __name__ == '__main__':
         #auto_select_device()
 
         cfg.accelerator = 'cuda'
-        cfg.devices = 0
+        cfg.devices = 1
+
+        print("CUDA Device Count:", torch.cuda.device_count())
+
+        for i in range(torch.cuda.device_count()):
+            print(f"Device {i}: {torch.cuda.get_device_name(i)}")
 
         # Print the currently selected device in PyTorch
         if torch.cuda.is_available():

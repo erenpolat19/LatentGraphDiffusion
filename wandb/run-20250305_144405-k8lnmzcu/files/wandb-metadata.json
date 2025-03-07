@@ -1,0 +1,83 @@
+{
+  "os":  "Linux-5.14.0-503.19.1.el9_5.x86_64-x86_64-with-glibc2.34",
+  "python":  "CPython 3.9.21",
+  "startedAt":  "2025-03-05T22:44:06.310605Z",
+  "args":  [
+    "--cfg",
+    "cfg/ogbg-molhiv-diffusion-masked.yaml",
+    "--repeat",
+    "2",
+    "wandb.use",
+    "True"
+  ],
+  "program":  "/home/eren/LatentGraphDiffusion/train_diffusion.py",
+  "codePath":  "train_diffusion.py",
+  "git":  {
+    "remote":  "git@github.com:erenpolat19/LatentGraphDiffusion.git",
+    "commit":  "f5d8cdde49245a747c9649ac91950af0f689316c"
+  },
+  "email":  "eren@ucsb.edu",
+  "root":  "/home/eren/LatentGraphDiffusion",
+  "host":  "styx.cs.ucsb.edu",
+  "executable":  "/home/eren/miniconda3/envs/lgd2/bin/python",
+  "codePathLocal":  "train_diffusion.py",
+  "cpu_count":  104,
+  "cpu_count_logical":  208,
+  "gpu":  "NVIDIA H200",
+  "gpu_count":  1,
+  "disk":  {
+    "/":  {
+      "total":  "1876261445632",
+      "used":  "11171880960"
+    }
+  },
+  "memory":  {
+    "total":  "1081293811712"
+  },
+  "cpu":  {
+    "count":  104,
+    "countLogical":  208
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "NVIDIA H200",
+      "memoryTotal":  "150754820096",
+      "architecture":  "Hopper"
+    }
+  ],
+  "slurm":  {
+    "cluster_name":  "styx",
+    "conf":  "/etc/slurm/slurm.conf",
+    "cpus_on_node":  "1",
+    "gpus_on_node":  "1",
+    "gtids":  "0",
+    "job_account":  "prof_ambuj",
+    "job_cpus_per_node":  "1",
+    "job_gid":  "1009",
+    "job_gpus":  "12",
+    "job_id":  "1377",
+    "job_name":  "molhiv_diffusion_masked.job",
+    "job_nodelist":  "styx",
+    "job_num_nodes":  "1",
+    "job_partition":  "styx",
+    "job_qos":  "normal",
+    "job_uid":  "1009",
+    "job_user":  "eren",
+    "jobid":  "1377",
+    "localid":  "0",
+    "nnodes":  "1",
+    "node_aliases":  "(null)",
+    "nodeid":  "0",
+    "nodelist":  "styx",
+    "prio_process":  "0",
+    "procid":  "0",
+    "submit_dir":  "/home/eren/LatentGraphDiffusion",
+    "submit_host":  "styx.cs.ucsb.edu",
+    "task_pid":  "893868",
+    "tasks_per_node":  "1",
+    "topology_addr":  "styx",
+    "topology_addr_pattern":  "node",
+    "working_cluster":  "styx:styx:9000:9728:109"
+  },
+  "cudaVersion":  "12.7"
+}

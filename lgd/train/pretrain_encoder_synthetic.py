@@ -29,6 +29,7 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
         batch.split = 'train'
         batch.to(torch.device(cfg.accelerator))
         node_label, edge_label, graph_label = batch.x.clone().detach(), batch.edge_attr.clone().detach(), batch.y
+        
         # if len(graph_label.shape) == 1:
         #     graph_label = graph_label.unsqueeze(1)  # for qm9
         if cfg.dataset.get("align", False):

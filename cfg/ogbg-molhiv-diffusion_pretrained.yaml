@@ -148,7 +148,7 @@ dt:
   layer_norm: True
   batch_norm: False
   act: 'relu'
-  bn_momentum: 0.1 #HERE
+  bn_momentum: 0.01 #HERE
   bn_no_runner: False #HERE
   attn:
     clamp: 5.
@@ -164,7 +164,7 @@ dt:
     attn_product: mul
     attn_reweight: False
     edge_reweight: False
-    bn_momentum: 0.1 #HERE
+    bn_momentum: 0.01 #HERE
     bn_no_runner: False #HERE
   norm_e: True
   O_e: True

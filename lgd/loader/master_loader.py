@@ -267,6 +267,7 @@ def load_dataset_master(format, name, dataset_dir):
                 logging.info(f"Parsed {pe_name} PE kernel times / steps: "
                              f"{pecfg.kernel.times}")
     if pe_enabled_list:
+        print('pe_enabled_list', pe_enabled_list)
         start = time.perf_counter()
         logging.info(f"Precomputing Positional Encoding statistics: "
                      f"{pe_enabled_list} for all graphs...")

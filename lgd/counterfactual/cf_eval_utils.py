@@ -9,7 +9,7 @@ def cf_eval(_true, _pred, logger):
     true = torch.cat(self._true).squeeze(-1)
     pred_score = torch.cat(self._pred)
 
-    print('pred_score', pred_score)
+    #print('pred_score', pred_score)
     pred_int = self._get_pred_int(pred_score)
     print('pred_int', pred_int )
     if true.shape[0] < 1e7:  # AUROC computation for very large datasets is too slow.

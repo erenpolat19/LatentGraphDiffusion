@@ -2,9 +2,14 @@
 out_dir: results
 metric_best: auc
 tensorboard_each_run: False  # Log to Tensorboard each run
-accelerator: "cuda:0"
+accelerator: "cuda"
 name_tag: IMDB-MULTI
 run_multiple_splits: [] #FROM CALLIE -eren
+# share: #-eren ADDED NEW BC OF ERROR
+#   dim_in: 1
+#   dim_out: 1
+#   num_splits: 1
+composed_encoder_batch_fix: False #Eren
 wandb:
   use: False
   project: imdbm
@@ -15,13 +20,13 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: Atom_pad #was atom, getting error
-  node_encoder_num_types: 120
+  node_encoder_name: LinearNode #was atom, getting error
+  node_encoder_num_types: 2
   node_encoder_bn: False
   edge_encoder: True
-  edge_encoder_name: Bond_pad #was bond, getting error
-  edge_encoder_num_types: 5
+  edge_encoder_name: DummyEdge
   edge_encoder_bn: False
+  edge_encoder_num_types: 2
   add_virtual_node_edge: False #False yaptik cabuk baslasin diye -eren
   subgraph: False
   split_mode: 'random'
@@ -37,7 +42,7 @@ posenc_ERE: # HERE
   enable:
 train:
   mode: pretrain_encoder
-  batch_size: 256 #was 256, changed for trace -eren
+  batch_size: 128 #was 256, changed for trace -eren
   eval_period: 1
   enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
   ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
@@ -51,11 +56,11 @@ train:
     mask_label_prob: 0.5
     recon: all
     original_task: True #graph level classification loss is added (loss + loss_graph * cfg.train.pretrain.graph_factor)
-    input_target: True #determines whether label information should be used as additional input during pretraining
-    node_factor: 1.0 #loss for node, edge, graph level pred
+    input_target: False #determines whether label information should be used as additional input during pretraining
+    node_factor: 0.0 #loss for node, edge, graph level pred
     edge_factor: 1.0
     graph_factor: 1.0
-    atom_bond_only: False #was false -eren only keeps the first dimension, meaning oonnnly the atom number (node_label = node_label[:, 0].flatten())
+    atom_bond_only: True #was false -eren only keeps the first dimension, meaning oonnnly the atom number (node_label = node_label[:, 0].flatten())
             
            
 model:
@@ -68,14 +73,15 @@ posenc_RRWP:
   ksteps: 16
 encoder:
   model_type: GraphTransformerStructureEncoder
-  in_dim: 40
-  prefix_dim: 64
-  posenc_in_dim: 16
+  in_dim: 40 #cfg.in_dim + cfg.posenc_dim == cfg.hid_dim
+  prefix_dim: 64 #cfg.prefix_dim == cfg.hid_dim, 
+  posenc_in_dim: 32 #was 16 now 32 -eren
   posenc_in_dim_edge: 16
   posenc_dim: 24
   pe_raw_norm: None
   hid_dim: 64
   out_dim: 4
+  decode_dim: 3
   use_time: False
   temb_dim: 0
   num_heads: 4
@@ -124,15 +130,16 @@ encoder:
   label_embed_type: add_all
   num_task: 1
   task_type: classification
-  num_classes: 2
+  num_classes: 3
   node_encoder: True
-  node_encoder_name: Atom_pad #was atom, getting an error
-  node_encoder_num_types: 120
+  node_encoder_name: LinearNode #was atom, getting error
+  node_encoder_num_types: 2
   node_encoder_bn: False
   edge_encoder: True
-  edge_encoder_name: Bond_pad #was bond, getting an error
-  edge_encoder_num_types: 5
+  edge_encoder_name: DummyEdge
   edge_encoder_bn: False
+  edge_encoder_num_types: 2
+  add_virtual_node_edge: False #False yaptik cabuk baslasin diye -eren
 gt:
   layer_type: GritTransformer
   layers: 10
@@ -162,18 +169,29 @@ gnn: # decoder --> san_graph = MLP + pooling
   dropout: 0.0
   agg: mean
   normalize_adj: False
+posenc_LapPE:
+  enable: True
+  eigen:
+    laplacian_norm: none
+    eigvec_norm: L2
+    max_freqs: 1
+  model: DeepSet
+  dim_pe: 12 #
+  layers: 2
+  raw_norm_type: none
 posenc_RWSE:
-  enable: False
+  enable: True
   kernel:
-    times_func: range(1,21)
+    times_func: range(1,17)
+    times: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] #eren
   model: Linear
-  dim_pe: 28
+  dim_pe: 12 #28 di 12 yaptim
   raw_norm_type: BatchNorm
 optim:
   clip_grad_norm: True
   optimizer: adamW
   weight_decay: 1e-5
-  base_lr: 0.0001
+  base_lr: 0.001
   max_epoch: 1000
   num_warmup_epochs: 10
   scheduler: cosine_with_warmup

@@ -92,6 +92,7 @@ class LapPENodeEncoder(torch.nn.Module):
 
 
     def forward(self, batch):
+        print('batch nasi eigvals yok', batch,)
         if not (hasattr(batch, 'EigVals') and hasattr(batch, 'EigVecs')):
             raise ValueError("Precomputed eigen values and vectors are "
                              f"required for {self.__class__.__name__}; "

@@ -56,6 +56,7 @@ def concat_node_encoders(encoder_classes, pe_enc_names, edge=False):
                 self.encoder2 = self.enc2_cls(dim_emb, expand_x=False)
 
         def forward(self, batch):
+            print('concat2 node encoder batch', batch)
             batch = self.encoder1(batch)
             batch = self.encoder2(batch)
             return batch
@@ -74,13 +75,18 @@ def concat_node_encoders(encoder_classes, pe_enc_names, edge=False):
             # PE dims can only be gathered once the cfg is loaded.
             enc2_dim_pe = getattr(cfg, f"posenc_{self.enc2_name}").dim_pe
             enc3_dim_pe = getattr(cfg, f"posenc_{self.enc3_name}").dim_pe
+            print('dim_emb', dim_emb)
+            print(f"posenc_{self.enc2_name}",  enc2_dim_pe)
+            print(f"posenc_{self.enc3_name}",  enc3_dim_pe)
             self.encoder1 = self.enc1_cls(dim_emb - enc2_dim_pe - enc3_dim_pe)
             self.encoder2 = self.enc2_cls(dim_emb - enc3_dim_pe, expand_x=False)
             self.encoder3 = self.enc3_cls(dim_emb, expand_x=False)
 
         def forward(self, batch):
+            print('concat3 node encoder batch', batch)
             batch = self.encoder1(batch)
             batch = self.encoder2(batch)
+            
             batch = self.encoder3(batch)
             return batch
 
@@ -110,8 +116,7 @@ def concat_node_encoders(encoder_classes, pe_enc_names, edge=False):
 #            'TypeDictNode': TypeDictNodeEncoder,
 #            'VOCNode': VOCNodeEncoder,
 #            'LinearNode': LinearNodeEncoder}
-
-ds_encs = {'Atom': AtomEncoder}
+ds_encs = {'Atom': AtomEncoder, 'LinearNode': LinearNodeEncoder}
 # Positional Encoding node encoders.
 # pe_encs = {'LapPE': LapPENodeEncoder,
 #            'RWSE': RWSENodeEncoder,
@@ -120,7 +125,7 @@ ds_encs = {'Atom': AtomEncoder}
 #            'SignNet': SignNetNodeEncoder,
 #            'EquivStableLapPE': EquivStableLapPENodeEncoder,
 #            'InterRWSE_Node': InterRWSENodeEncoder}
-pe_encs = {'RWSE': RWSENodeEncoder}
+pe_encs = {'RWSE': RWSENodeEncoder, 'LapPE': LapPENodeEncoder}
 
 # ds_edge_encs = {'Bond': BondEncoder,
 #                 'ASTEdge': ASTEdgeEncoder,

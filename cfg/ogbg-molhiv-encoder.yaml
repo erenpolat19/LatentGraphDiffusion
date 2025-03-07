@@ -37,7 +37,7 @@ posenc_ERE: # HERE
   enable:
 train:
   mode: pretrain_encoder
-  batch_size: 256 #was 256, changed for trace -eren
+  batch_size: 1 #was 256, changed for trace -eren
   eval_period: 1
   enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
   ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
@@ -56,8 +56,6 @@ train:
     edge_factor: 1.0
     graph_factor: 1.0
     atom_bond_only: False #was false -eren only keeps the first dimension, meaning oonnnly the atom number (node_label = node_label[:, 0].flatten())
-            
-           
 model:
   type: GraphTransformerStructureEncoder
   loss_fun: cross_entropy

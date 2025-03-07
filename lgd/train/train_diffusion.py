@@ -167,12 +167,12 @@ def custom_train_diffusion(loggers, loaders, model, optimizer, scheduler):
         run = wandb.init(entity=cfg.wandb.entity, project=cfg.wandb.project,
                          name=wandb_name)
         run.config.update(cfg_to_dict(cfg))
-
+    
     num_splits = len(loggers)
     split_names = ['val', 'test']
     full_epoch_times = []
     perf = [[] for _ in range(num_splits)]
-
+    print('num_splits', num_splits)
     #print_gpu_usage('Real Train diffusion line 172, before start training')
     for cur_epoch in range(start_epoch, cfg.optim.max_epoch):
         #print_gpu_usage(f'Epoch {cur_epoch} Train diffusion start')
@@ -181,6 +181,10 @@ def custom_train_diffusion(loggers, loaders, model, optimizer, scheduler):
         train_epoch(loggers[0], loaders[0], model, optimizer, scheduler,
                     cfg.optim.batch_accumulation)
         perf[0].append(loggers[0].write_epoch(cur_epoch))
+
+        #-eren
+        if cur_epoch % int(cfg.train.ckpt_period) == 0:
+            save_ckpt(model, optimizer, scheduler, cur_epoch)
 
         if cur_epoch > cfg.train.start_eval_epoch:
             if is_eval_epoch(cur_epoch):
@@ -191,6 +195,7 @@ def custom_train_diffusion(loggers, loaders, model, optimizer, scheduler):
             else:
                 for i in range(1, num_splits):
                     perf[i].append(perf[i][-1])
+
 
             val_perf = perf[1]
             if cfg.optim.scheduler == 'reduce_on_plateau':

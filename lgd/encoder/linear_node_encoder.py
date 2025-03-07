@@ -7,7 +7,7 @@ from torch_geometric.graphgym.register import register_node_encoder
 class LinearNodeEncoder(torch.nn.Module):
     def __init__(self, emb_dim):
         super().__init__()
-        
+        print('cfg.share.dim_in', cfg.share.dim_in)
         self.encoder = torch.nn.Linear(cfg.share.dim_in, emb_dim)
 
     def forward(self, batch):

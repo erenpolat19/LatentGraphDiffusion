@@ -160,6 +160,7 @@ class MultiModel(torch.nn.Module):
     def forward(self, batch, label=None, **kwargs):
         batch_num_node = batch.get('num_node_per_graph', torch.tensor([batch.num_nodes], dtype=torch.long, device=batch.x.device))
         batch_node_idx = num2batch(batch_num_node)
+        print('customencoder batch' ,batch)
         batch = self.encoder(batch)
         if label is not None:
             if not torch.is_tensor(label):

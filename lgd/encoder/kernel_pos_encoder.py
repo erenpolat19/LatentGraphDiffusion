@@ -89,6 +89,8 @@ class KernelPENodeEncoder(torch.nn.Module):
         pos_enc = getattr(batch, pestat_var)  # (Num nodes) x (Num kernel times)
         # pos_enc = batch.rw_landing  # (Num nodes) x (Num kernel times)
         if self.raw_norm:
+            print('pos_enc shape' , pos_enc.shape)
+            print('raw_norm', self.raw_norm)
             pos_enc = self.raw_norm(pos_enc)
         pos_enc = self.pe_encoder(pos_enc)  # (Num nodes) x dim_pe
 

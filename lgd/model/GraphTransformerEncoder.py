@@ -515,7 +515,9 @@ class GraphTransformerEncoder(nn.Module):
         if cfg.node_encoder_name == 'Embedding':
             self.node_emb = nn.Embedding(self.node_dict_dim, self.in_dim, padding_idx=0)
         else:
+            
             NodeEncoder = register.node_encoder_dict[cfg.node_encoder_name]
+            #print('NODE ENCODER in GraphTransformerEncoder', NodeEncoder)
             self.node_emb = NodeEncoder(self.in_dim)
         if cfg.edge_encoder_name == 'Embedding':
             self.edge_emb = nn.Embedding(self.edge_dict_dim, self.in_dim, padding_idx=0)
@@ -1212,6 +1214,7 @@ class GraphTransformerStructureEncoder(nn.Module):
         if cfg.node_encoder_name == 'Embedding':
             self.node_emb = nn.Embedding(self.node_dict_dim, self.in_dim, padding_idx=0)
         else:
+            #print('node_dict', register.node_encoder_dict)
             NodeEncoder = register.node_encoder_dict[cfg.node_encoder_name]
             self.node_emb = NodeEncoder(self.in_dim)
 
@@ -1344,12 +1347,20 @@ class GraphTransformerStructureEncoder(nn.Module):
         assert torch.equal(batch_node_idx, batch.batch)
         batch_edge_idx = num2batch(batch_num_node ** 2)
         virtual_node_idx = torch.cumsum(batch_num_node, dim=0) - 1
-        h = self.node_emb(batch.x).reshape(num_nodes, -1)
+
+        if cfg.get('composed_encoder_batch_fix', False): #Eren, only for LinearNode+LapPE+RWSE, because the composed encoder wants the whole batch object
+            #but not only batch.x, it looks for batch.eigvals and we get an error, so i put this line
+             h = self.node_emb(batch)
+             #print('h after composed encoder', h)
+             h = h.x.reshape(num_nodes, -1)
+        else:
+            h = self.node_emb(batch.x).reshape(num_nodes, -1)
         e = self.edge_emb(batch.edge_attr).reshape(num_edges, -1)
 
         if self.posenc_dim > 0:
             if self.posenc_in_dim > 0 and batch.get("pestat_node", None) is not None:
                 batch_posenc_emb = self.posenc_emb(batch.pestat_node)
+                #print('POSEMB KULLANIYOR, CONCAT ETCEK')
             else:
                 batch_posenc_emb = torch.zeros([num_nodes, self.posenc_dim], dtype=torch.float, device=batch.x.device)
             if self.posenc_in_dim_edge > 0 and batch.get("pestat_edge", None) is not None:

@@ -1091,6 +1091,7 @@ class LatentDiffusion(DDPM):
         # logging.info(model_output.shape)
 
         if cfg.train.get('cf_mode', False) and self.current_epoch > cfg.train.get('cf_start_epoch', -1):
+            print('cf e girdi')
             loss_task, graph_decode = compute_loss(graph_decode, 1 - batch.y.clone().detach())
             loss_task *= cfg.diffusion.cf_factor
         else:

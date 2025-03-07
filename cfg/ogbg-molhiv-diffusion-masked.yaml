@@ -1,12 +1,14 @@
 out_dir: results
 metric_best: auc
-name_tag: ogbg-molhiv-orig
+name_tag: masked
 run_multiple_splits: [] #FROM CALLIE -eren
 # accelerator: "cuda:0"
 # device: "cuda:0"
 wandb:
-  use: False
+  use: True
   project: molhiv
+  name: 'molhiv_masked'
+  entity: 'epolat19'
 dataset:
   format: OGB
   name: ogbg-molhiv
@@ -28,8 +30,8 @@ dataset:
 gpu_mem: False
 train:
   mode: train_diffusion
-  cf_mode: True
-  cf_start_epoch: 100
+  cf_mode: False
+  cf_start_epoch: 1000
   batch_size: 512
   eval_period: 50
   enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
@@ -37,8 +39,8 @@ train:
   ckpt_clean: False
   ensemble_repeat: 1
   ensemble_mode: none
-  ckpt_period: 20
-  start_eval_epoch: 400
+  ckpt_period: 50
+  start_eval_epoch: 1000
   pretrain:
     mask_node_prob: 0.0
     mask_edge_prob: 0.0
@@ -193,7 +195,7 @@ diffusion:
   edge_factor: 1.0 #
   graph_factor: 0 #loss_graph = self.get_loss(batch_output.graph_attr, graph_attr_label, mean=False).mean([1])
   task_factor: 1.0 #loss_task, graph_decode = compute_loss(graph_decode, batch.y.clone().detach())
-  cf_factor: 3.0
+  cf_factor: 5.0
 gt:
   layer_type: CustomGatedGCN+Transformer
   layers: 10
@@ -217,14 +219,13 @@ optim:
   clip_grad_norm: True
   optimizer: adamW
   weight_decay: 1e-5
-  base_lr: 0.0001
+  base_lr: 1e-4
   max_epoch: 500
   scheduler: cosine_with_warmup
   num_warmup_epochs: 20
   min_lr: 1e-6
-  reduce_factor: 0.5
+  reduce_factor: 0.1
   schedule_patience: 5
-  min_lr: 1e-6
   batch_accumulation: 1
 # optim:
 #  clip_grad_norm: True

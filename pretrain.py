@@ -31,6 +31,8 @@ from lgd.optimizer.extra_optimizers import ExtendedSchedulerConfig
 from lgd.agg_runs import agg_runs
 from lgd.finetuning import load_pretrained_model_cfg, \
     init_model_from_pretrained
+from lgd.encoder.composed_encoders import *
+from lgd.encoder.linear_node_encoder import *
 
 from lgd.model.GraphTransformerEncoder import GraphTransformerEncoder # HERE 
 from lgd.train.pretrain_encoder import *
@@ -271,16 +273,29 @@ if __name__ == '__main__':
         cfg.seed = seed
         cfg.run_id = run_id
         seed_everything(cfg.seed)
-        auto_select_device()
+        #auto_select_device()
 
-        # cfg.accelerator = 'cpu' #-eren
-        # cfg.devices = None
-
+        cfg.accelerator = 'cpu' #-eren
+        cfg.devices = 0
+        
+        
+        
         # TODO: debug loader and dataset
         # dataset = load_dataset_master(cfg.dataset.format, cfg.dataset.name, cfg.dataset.dataset_dir) # HERE - uncommented this line
         if cfg.pretrained.dir:
             cfg = load_pretrained_model_cfg(cfg)
         loaders = create_loader()
+
+        print('DATASET INFO')
+        for batch in loaders[0]:
+            print('batch', batch)
+            print('edge_attr', batch.edge_attr)
+            print('edge_index', batch.edge_index)
+            print('x', batch.x)
+            print('y', batch.y[0])
+
+            break
+
         loggers = create_logger()
         logging.info(f"[*] Run ID {run_id}: seed={cfg.seed}, "
                      f"split_index={cfg.dataset.split_index}")

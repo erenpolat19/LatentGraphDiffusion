@@ -32,6 +32,12 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation)
             _true = true.detach().to('cpu', non_blocking=True)
             _pred = pred_score.detach().to('cpu', non_blocking=True)
         loss.backward()
+
+        #eren
+        for name, param in model.named_parameters():
+            if param.grad is None:
+                print(f"No gradient for {name}")
+
         # Parameters update after accumulating gradients for given num. batches.
         if ((iter + 1) % batch_accumulation == 0) or (iter + 1 == len(loader)):
             if cfg.optim.clip_grad_norm:
@@ -144,6 +150,7 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
                 perf[i].append(loggers[i].write_epoch(cur_epoch))
         else:
             for i in range(1, num_splits):
+                print('perf[i]', perf[i], i)
                 perf[i].append(perf[i][-1])
 
         val_perf = perf[1]

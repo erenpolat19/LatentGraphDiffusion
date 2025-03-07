@@ -58,7 +58,9 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
 
     # Eigen values and vectors.
     evals, evects = None, None
+    print('pe_types', pe_types)
     if 'LapPE' in pe_types or 'EquivStableLapPE' in pe_types:
+        print('lappe ye girdi')
         # Eigen-decomposition with numpy, can be reused for Heat kernels.
         L = to_scipy_sparse_matrix(
             *get_laplacian(undir_edge_index, normalization=laplacian_norm_type,

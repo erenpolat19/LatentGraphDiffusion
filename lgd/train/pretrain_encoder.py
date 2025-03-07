@@ -17,6 +17,7 @@ from copy import deepcopy
 import warnings
 import torch.nn.functional as F
 from utils import random_mask
+from lgd.config.posenc_config import *
 
 
 def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation, visualize=False):
@@ -29,6 +30,7 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
     for iter, batch in enumerate(loader):
         batch.split = 'train'
         batch.to(torch.device(cfg.accelerator))
+        
         node_label, edge_label, graph_label = batch.x.clone().detach(), batch.edge_attr.clone().detach(), batch.y
         # if len(graph_label.shape) == 1:
         #     graph_label = graph_label.unsqueeze(1)  # for qm9
@@ -44,10 +46,15 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
         # the embed of labels and prefix are done in fine-tuning of the encoder, not pretraining
         masked_label_idx = torch.rand(batch.num_graphs) < cfg.train.pretrain.get("mask_label_prob", 0.)
         input_label = batch.y.clone().detach() if cfg.train.pretrain.input_target else None
+        #print('input label', input_label)
         if input_label is not None:
             if cfg.dataset.format == 'PyG-QM9':
                 input_label = (input_label - batch.y_mean) / batch.y_std
             input_label = (input_label, masked_label_idx)
+        # print('input label', input_label)
+        # print('batch.y' ,batch.y)
+        # print('batch.edge_index' ,batch.edge_index)
+        # print('batch.x' ,batch.x)
         pred = model(batch, label=input_label) #pred is 
         if visualize and iter == 0:
             # logging.info('haci abi')
@@ -61,7 +68,11 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
             pred.edge_attr = pred.edge_attr.detach()
             pred.graph_attr = pred.graph_attr.detach()
         node_pred, edge_pred, graph_pred = model.model.decode(pred)
-        print('graph_pred ilk', graph_pred)
+
+        if cfg.dataset.name == 'IMDB-MULTI':
+            graph_pred = graph_pred.reshape(-1, cfg.encoder.decode_dim)
+
+        #print('graph_pred ilk', graph_pred)
         # if iter == 0:
         #     logging.info(cfg.train.pretrain.input_target)
         #     logging.info(masked_label_idx.float().sum())
@@ -82,11 +93,19 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
         # print('recon', cfg.train.pretrain.recon, 'node_pred', node_pred.shape, 'node_label', node_label.shape)
         node_recon, edge_recon, tuple_recon, node_pe_recon, edge_pe_recon = model.model.decode_recon(pred)
         #print(f'node_recon {node_recon.shape}, edge_recon {edge_recon.shape}, tuple_recon {tuple_recon.shape}, node_pe_recon {node_pe_recon.shape}, edge_pe_recon {edge_pe_recon.shape}')
-        tuple_label = tuple_label_dict[node_label[batch.edge_index[0]], node_label[batch.edge_index[1]]]
+        
+        if cfg.dataset.name == 'IMDB-MULTI':
+            node_label = node_label.long()
+            tuple_label = torch.zeros(batch.edge_index.shape[1])
+        else:
+            tuple_label = tuple_label_dict[node_label[batch.edge_index[0]], node_label[batch.edge_index[1]]]
+        
         
         #node label shape mismatch CHANGE -eren
         num_classes = node_pred.shape[1]  # 130 classes
-        node_label_one_hot = F.one_hot(node_label, num_classes=num_classes).float()
+        #print('node_label', node_label)
+        if cfg.dataset.name == 'ogbg-molhiv': #change -eren
+            node_label_one_hot = F.one_hot(node_label, num_classes=num_classes).float()
 
         if cfg.dataset.name == 'ogbg-molhiv': #change -eren
             loss_node = criterion_node(node_pred, node_label_one_hot) if cfg.train.pretrain.recon == 'all' \
@@ -149,7 +168,9 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
             optimizer.zero_grad()
         _true = graph_label.detach().to('cpu', non_blocking=True)
         _pred = graph_pred.detach().to('cpu', non_blocking=True)
-        print('_pred',_pred)
+
+        #print('graph_pred' , graph_pred)
+        #print('_pred',_pred)
 
 
         logger.update_stats(true=_true,
@@ -178,6 +199,11 @@ def eval_epoch(logger, loader, model, split='val', repeat=1, ensemble_mode='none
                 # pred, true = model(batch)
                 node_label, edge_label, graph_label = batch.x.clone().detach(), batch.edge_attr.clone().detach(), batch.y
                 
+                if cfg.dataset.name == 'IMDB-MULTI':
+                    node_label = node_label.long()
+                    tuple_label = torch.zeros(batch.edge_index.shape[1])
+                else:
+                    tuple_label = tuple_label_dict[node_label[batch.edge_index[0]], node_label[batch.edge_index[1]]]
 
                 if cfg.train.pretrain.input_target:
                     batch_1 = copy.deepcopy(batch)
@@ -191,13 +217,16 @@ def eval_epoch(logger, loader, model, split='val', repeat=1, ensemble_mode='none
                     loss_labeled, _ = compute_loss(graph_pred_, batch_1.y)
                 pred = model(batch, label=None)
                 node_pred, edge_pred, graph_pred = model.model.decode(pred)
+                graph_pred = graph_pred.reshape(-1, cfg.encoder.decode_dim)
 
                 #eren
                 if not cfg.train.pretrain.atom_bond_only:
                     node_label = node_label[:, 0].flatten()
                     edge_label = edge_label[:, 0].flatten()
                 num_classes = node_pred.shape[1]  # 130 classes
-                node_label_one_hot = F.one_hot(node_label, num_classes=num_classes).float()
+                #print('node_pred', node_pred)
+                if cfg.dataset.name == 'ogbg-molhiv': #change -eren
+                    node_label_one_hot = F.one_hot(node_label, num_classes=num_classes).float()
                 #-
                 if cfg.dataset.format == 'PyG-QM9':
                     graph_pred = graph_pred * batch.get('y_std', 1.) + batch.get('y_mean', 0.)
