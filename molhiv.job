@@ -1,9 +1,11 @@
 #!/bin/bash -l
-#SBATCH --gres=gpu:h200-1g.35gb
+#SBATCH --gres=gpu:h200-1g.18gb:1
 cd $SLURM_SUBMIT_DIR
 
 /bin/hostname
 
-conda activate lgd2
+conda activate lgd
 
-python pretrain.py --cfg cfg/ogbg-molhiv_eren_yeni.yaml  --repeat 5 wandb.use False
+export CUDA_VISIBLE_DEVICES=0
+
+python pretrain.py --cfg cfg/imdbb-encoder.yaml  --repeat 5 wandb.use False

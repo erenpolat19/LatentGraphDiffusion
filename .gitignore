@@ -5,4 +5,5 @@ results/
 environment.yml
 *.log
 *.job
-./outputs
+./outputs__pycache__/
+*.pyc

@@ -37,6 +37,9 @@ from lgd.encoder.linear_node_encoder import *
 from lgd.model.GraphTransformerEncoder import GraphTransformerEncoder # HERE 
 from lgd.train.pretrain_encoder import *
 from lgd.encoder.atom_bond_encoder import *
+from lgd.model.CustomEncoder import MultiModel
+from lgd.head.inductive_node import GNNInductiveNodeHead
+from lgd.train.pretrain_encoder_inductive import custom_pretrain_encoder
 #
 # parser = argparse.ArgumentParser()
 # parser.add_argument("--dataset", type=str, default="zinc12")

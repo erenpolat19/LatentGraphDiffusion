@@ -8,7 +8,7 @@ import logging
 class LinearEdgeEncoder(torch.nn.Module):
     def __init__(self, emb_dim):
         super().__init__()
-        if cfg.dataset.name in ['MNIST', 'CIFAR10', 'planar', 'sbm', 'comm20']:
+        if cfg.dataset.name in ['MNIST', 'CIFAR10', 'planar', 'sbm', 'comm20', 'IMDB-BINARY']:
             self.in_dim = 1
         elif cfg.dataset.name in ['MUTAG']:
             self.in_dim = 4
@@ -21,7 +21,7 @@ class LinearEdgeEncoder(torch.nn.Module):
         if isinstance(batch, torch.Tensor):
             # logging.info(batch)
             # logging.info(batch.shape)
-            batch = self.encoder(batch.view(-1, self.in_dim))
+            batch = self.encoder(batch.view(-1, self.in_dim).float())
         else:
-            batch.edge_attr = self.encoder(batch.edge_attr.view(-1, self.in_dim))
+            batch.edge_attr = self.encoder(batch.edge_attr.view(-1, self.in_dim).float()) # HERE -- added .float()
         return batch

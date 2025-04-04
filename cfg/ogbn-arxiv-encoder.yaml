@@ -5,7 +5,9 @@ metric_agg: argmax
 tensorboard_each_run: False  # Log to Tensorboard each run
 #accelerator: "cuda:3"
 #device: "cuda:3"
-accelerator: "cuda:0"
+# accelerator: "cuda:0"
+name_tag: ogbn-arxiv
+run_multiple_splits: [] #FROM CALLIE -eren
 mlflow:
   use: False
   project: Exp
@@ -28,7 +30,18 @@ dataset:
   add_virtual_node_edge: False
   subgraph: False
   aug_edge: False
+  split_index: 0
 #  split: [0.6, 0.2, 0.2]
+pretrained:
+  dir:
+prep:
+  add_self_loops:
+  exp: # HERE
+  dist_enable: # HERE
+posenc_ERN: # HERE
+  enable: 
+posenc_ERE: # HERE
+  enable:
 train:
   mode: pretrain_encoder_inductive
   batch_size: 1
@@ -51,6 +64,9 @@ model:
   loss_fun: cross_entropy
   edge_decoding: dot
   graph_pooling: mean
+posenc_RRWP:
+  enable: False #-eren False yapsak mi, yaptik
+  ksteps: 16
 posenc_LapPE:
   enable: False
   eigen:
@@ -113,6 +129,8 @@ encoder:
   edge_encoder_name: DummyEdge
   edge_encoder_bn: False
   add_virtual_node_edge: False
+  bn_momentum: 0.1 #HERE
+  bn_no_runner: False #HERE
 gt:
   layer_type: GritTransformer
   layers: 10
@@ -151,3 +169,6 @@ optim:
   num_warmup_epochs: 50
   scheduler: cosine_with_warmup
   min_lr: 1e-6
+  reduce_factor: 0.5 # -eren idk what s the right one
+  schedule_patience: 15 # -eren idk what s the right one
+  batch_accumulation: 1 # -eren idk

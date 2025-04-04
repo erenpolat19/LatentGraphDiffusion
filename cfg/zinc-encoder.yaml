@@ -2,6 +2,8 @@
 out_dir: results
 metric_best: mae
 metric_agg: argmin
+name_tag: zinc # add
+run_multiple_splits: [] # add
 tensorboard_each_run: False  # Log to Tensorboard each run
 #accelerator: "cuda:3"
 #device: "cuda:3"
@@ -29,6 +31,7 @@ dataset:
   edge_encoder_bn: False
   add_virtual_node_edge: True
   subgraph: False
+  split_index: 0 # add
 train:
   mode: pretrain_encoder
   batch_size: 64
@@ -49,8 +52,20 @@ train:
     node_factor: 0.0
     edge_factor: 0.0
     graph_factor: 1.0
+    atom_bond_only: False
+pretrained: # add
+  dir:
+  freeze_main: False
+  reset_prediction_head: False
+prep:
+  exp: # HERE
+  dist_enable: # HERE
+posenc_ERN: # HERE
+  enable: 
+posenc_ERE: # HERE
+  enable:
 model:
-  type: GraphTransformerEncoder
+  type: GraphTransformerEncoder # GraphTransformerEncoder did not have attribute decode_recon
   loss_fun: l1
   edge_decoding: dot
   graph_pooling: add
@@ -69,6 +84,8 @@ encoder:
   num_layers: 10
   dropout: 0.0
   attn_dropout: 0.5
+  bn_momentum: 0.1 #HERE
+  bn_no_runner: False #HERE
   attn:
     clamp: 5.
     act: 'relu'
@@ -83,6 +100,8 @@ encoder:
     attn_product: mul
     attn_reweight: True
     edge_reweight: True
+    bn_momentum: 0.1 #HERE
+    bn_no_runner: False #HERE
   mpnn:
     enable: True
     act: 'relu'
@@ -102,7 +121,7 @@ encoder:
   pool_vn: False
   # post_pool: True
   prefix_type: add_virtual
-  label_embed_type: for first stage model only
+  label_embed_type: add_virtual # for first stage model only
   num_task: 1
   task_type: regression
   # num_classes: only for classification
@@ -125,6 +144,8 @@ gt:
 #  bn_momentum: 0.01
   update_e: True
   attn_dropout: 0.2
+  bn_momentum: 0.1 #HERE
+  bn_no_runner: False #HERE
   attn:
     clamp: 5.
     act: 'relu'
@@ -133,6 +154,8 @@ gt:
     O_e: True
     norm_e: True
     fwl: False
+    bn_momentum: 0.1 #HERE
+    bn_no_runner: False #HERE
 gnn: # decoder --> san_graph = MLP + pooling
   head: san_graph
   layers_pre_mp: 0
@@ -162,3 +185,6 @@ optim:
   num_warmup_epochs: 50
   scheduler: cosine_with_warmup
   min_lr: 1e-6
+  reduce_factor: 0.5
+  schedule_patience: 5
+  batch_accumulation: 1

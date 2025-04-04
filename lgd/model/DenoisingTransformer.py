@@ -414,6 +414,7 @@ class DenoisingTransformerLayer(nn.Module):
             temb_h = self.temb_proj_h(self.act(temb_h))
             temb_e = self.temb_proj_e(self.act(temb_e))
             batch.x = batch.x + temb_h
+
             batch.edge_attr = batch.edge_attr + temb_e
 
         # multi-head attention out

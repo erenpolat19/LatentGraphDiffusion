@@ -194,7 +194,10 @@ def custom_train_diffusion(loggers, loaders, model, optimizer, scheduler):
                     perf[i].append(loggers[i].write_epoch(cur_epoch))
             else:
                 for i in range(1, num_splits):
-                    perf[i].append(perf[i][-1])
+                    if perf[i]:
+                        perf[i].append(perf[i][-1])
+                    # else:
+                    #     perf[i].append(0.0) #HERE
 
 
             val_perf = perf[1]
@@ -214,21 +217,38 @@ def custom_train_diffusion(loggers, loaders, model, optimizer, scheduler):
 
             # Log current best stats on eval epoch.
             if is_eval_epoch(cur_epoch):
+                # print("HERE val_perf: ", val_perf)
+                # HERE added this bc I add 0.0 to epochs we don't eval, so we need to skip over those 
+                # filtered_val_perf = [vp for vp in val_perf if isinstance(vp, dict) and 'loss' in vp]
+
+                # if filtered_val_perf:
+                #     best_index = np.array([vp['loss'] for vp in filtered_val_perf]).argmin()
+                #     best_entry = filtered_val_perf[best_index]  # Get the actual dictionary
+                #     best_val = f"val_{m}: {best_entry[m]:.4f}" 
+                #     best_test = f"test_{m}: {best_entry[m]:.4f}" # Access metric from the dictionary
+                # else:
+                #     best_val = "No valid validation performance recorded."
+
+                # if filtered_val_perf:  # Ensure it's not empty before calling argmin
+                #     best_epoch = np.array([vp['loss'] for vp in filtered_val_perf]).argmin()
+                # else:
+                #     best_epoch = None  # Handle the case where no valid loss values exist
+
                 best_epoch = np.array([vp['loss'] for vp in val_perf]).argmin()
                 best_train = best_val = best_test = ""
                 if cfg.metric_best != 'auto':
                     # Select again based on val perf of `cfg.metric_best`.
                     m = cfg.metric_best
-                    best_epoch = getattr(np.array([vp[m] for vp in val_perf]),
-                                         cfg.metric_agg)()
+                    best_epoch = getattr(np.array([vp[m] for vp in val_perf]), 
+                                         cfg.metric_agg)() # HERE filtered_val_perf
                     if m in perf[0][best_epoch]:
                         best_train = f"train_{m}: {perf[0][best_epoch][m]:.4f}"
                     else:
                         # Note: For some datasets it is too expensive to compute
                         # the main metric on the training set.
                         best_train = f"train_{m}: {0:.4f}"
-                    best_val = f"val_{m}: {perf[1][best_epoch][m]:.4f}"
-                    best_test = f"test_{m}: {perf[2][best_epoch][m]:.4f}"
+                    best_val = f"val_{m}: {perf[1][best_epoch][m]:.4f}" # HERE
+                    best_test = f"test_{m}: {perf[2][best_epoch][m]:.4f}" # HERE
 
                     if cfg.wandb.use:
                         bstats = {"best/epoch": best_epoch}

@@ -1334,6 +1334,8 @@ class LatentDiffusion(DDPM):
                       mask=None, x0=None, img_callback=None, start_T=None,
                       log_every_t=None):
 
+        # print("SHAPE: ", shape)
+
         if not log_every_t:
             log_every_t = self.log_every_t
         device = self.betas.device
@@ -1346,6 +1348,13 @@ class LatentDiffusion(DDPM):
         if self.force_undirected:
             symmetrized = symmetrize(batch.edge_index, batch.batch, img[batch.num_nodes:])
             img[batch.num_nodes:] = symmetrized
+
+        # print("In p_sample_loop, batch.edge_attr shape: ", batch.edge_attr.shape)
+
+        # print("img shape:", img.shape)
+        # print("batch.num_nodes:", batch.num_nodes)
+        # print("img[batch.num_nodes:] shape:", img[batch.num_nodes:].shape)
+
         batch.x = img[: batch.num_nodes]
         batch.edge_attr = img[batch.num_nodes:]
 
@@ -1399,6 +1408,9 @@ class LatentDiffusion(DDPM):
                mask=None, x0=None, shape=None,**kwargs):
         if shape is None:
             shape = (batch_idx.shape[0], self.hid_dim)
+
+        # print("In LGD sample, batch.edge_attr shape:", batch.edge_attr.shape)
+
         # TODO: check if this part is necessary for multiple conditions
         # if cond is not None:
         #     if isinstance(cond, dict):

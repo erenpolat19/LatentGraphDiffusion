@@ -113,7 +113,7 @@ def load_dataset_master(format, name, dataset_dir):
         dataset_dir = osp.join(dataset_dir, pyg_dataset_id)
         processed_path = dataset_dir + '/' + name + '/processed.pt'
         if os.path.exists(processed_path):
-            dataset = torch.load(processed_path, map_location="cpu")
+            dataset = torch.load(processed_path, map_location="cpu", weights_only=False) # HERE -- weights_only=False
             print(dataset[0].x)
             return dataset
         if pyg_dataset_id == 'GNNBenchmarkDataset':

@@ -17,6 +17,7 @@ from copy import deepcopy
 import warnings
 import torch.nn.functional as F
 from utils import random_mask
+from lgd.loss.l1 import l1_losses
 from lgd.config.posenc_config import *
 
 
@@ -68,6 +69,7 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
             pred.edge_attr = pred.edge_attr.detach()
             pred.graph_attr = pred.graph_attr.detach()
         node_pred, edge_pred, graph_pred = model.model.decode(pred)
+        # print('graph_pred ilk', graph_pred)
 
         if cfg.dataset.name == 'IMDB-MULTI':
             graph_pred = graph_pred.reshape(-1, cfg.encoder.decode_dim)
@@ -88,6 +90,14 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
 
 
 
+        # #little test -eren
+        # #print('node_pred', node_pred.shape, 'node_label', node_label.shape)
+        # # print('recon', cfg.train.pretrain.recon, 'node_pred', node_pred.shape, 'node_label', node_label.shape)
+        # node_recon, edge_recon, tuple_recon, node_pe_recon, edge_pe_recon = model.model.decode_recon(pred)
+        # #print(f'node_recon {node_recon.shape}, edge_recon {edge_recon.shape}, tuple_recon {tuple_recon.shape}, node_pe_recon {node_pe_recon.shape}, edge_pe_recon {edge_pe_recon.shape}')
+        # batch.edge_index = batch.edge_index.long()  # HERE -- DEBUG: Ensure edge_index is of type Long
+        # node_label = node_label.long() # HERE 
+        # tuple_label = tuple_label_dict[node_label[batch.edge_index[0]], node_label[batch.edge_index[1]]]
         #little test -eren
         #print('node_pred', node_pred.shape, 'node_label', node_label.shape)
         # print('recon', cfg.train.pretrain.recon, 'node_pred', node_pred.shape, 'node_label', node_label.shape)
@@ -100,6 +110,9 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
         else:
             tuple_label = tuple_label_dict[node_label[batch.edge_index[0]], node_label[batch.edge_index[1]]]
         
+        # #node label shape mismatch CHANGE -eren
+        # num_classes = node_pred.shape[1]  # 130 classes
+        # node_label_one_hot = F.one_hot(node_label, num_classes=num_classes).float()
         
         #node label shape mismatch CHANGE -eren
         num_classes = node_pred.shape[1]  # 130 classes
@@ -168,6 +181,7 @@ def pretrain_epoch(logger, loader, model, optimizer, scheduler, batch_accumulati
             optimizer.zero_grad()
         _true = graph_label.detach().to('cpu', non_blocking=True)
         _pred = graph_pred.detach().to('cpu', non_blocking=True)
+        # print('_pred',_pred)
 
         #print('graph_pred' , graph_pred)
         #print('_pred',_pred)
@@ -224,6 +238,8 @@ def eval_epoch(logger, loader, model, split='val', repeat=1, ensemble_mode='none
                     node_label = node_label[:, 0].flatten()
                     edge_label = edge_label[:, 0].flatten()
                 num_classes = node_pred.shape[1]  # 130 classes
+                node_label = node_label.long() # HERE -- added this 
+                node_label_one_hot = F.one_hot(node_label, num_classes=num_classes).float()
                 #print('node_pred', node_pred)
                 if cfg.dataset.name == 'ogbg-molhiv': #change -eren
                     node_label_one_hot = F.one_hot(node_label, num_classes=num_classes).float()
